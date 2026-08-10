@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+#
+# test — run the whole test suite yourself, no AI usage required.
+#
+# Every test runs offline against the deterministic DemoProvider (backend) and
+# MSW mocks (frontend), so this NEVER places a real LLM API call and costs $0.
+#
+# Usage:   ./test              # backend + frontend
+#          ./test backend      # backend (Python) only
+#          ./test frontend     # frontend (vitest) only
+#
+set -uo pipefail   # note: not -e — we want to run every suite and report at the end
+
+cd "$(dirname "$0")"
+
+if [ -t 1 ]; then
+  BOLD=$(tput bold 2>/dev/null || true); RESET=$(tput sgr0 2>/dev/null || true)
+else
+  BOLD=""; RESET=""
+fi
+say()  { echo "  $*"; }
+head() { echo; echo "${BOLD}== $* ==${RESET}"; }
+
+PY="backend/.venv/bin/python"
+which="${1:-all}"
+backend_rc=-1
+frontend_rc=-1
+
+run_backend() {
+  head "Backend (Python / unittest)"
+
+  # Force the offline demo provider so no real LLM calls happen even if a key
+  # is present in .env. backend/tests/__init__.py also sets this; belt + braces.
+  export LLM_PROVIDER=demo
+
+  # Pull DATABASE_URL out of .env if it's set, so the Postgres-gated suites
+  # (test_worker_pipeline, test_proposals_repository) actually run when a db is
+  # up. Without it they self-skip — that's expected, not a failure.
+  if [ -f .env ] && grep -qE '^DATABASE_URL=' .env; then
+    export DATABASE_URL="$(grep -E '^DATABASE_URL=' .env | tail -1 | cut -d= -f2-)"
+    say "DATABASE_URL found — Postgres-backed suites will run."
+  else
+    say "No DATABASE_URL — Postgres-backed suites will self-skip (expected)."
+  fi
+
+  if [ ! -x "$PY" ]; then
+    echo "  ${BOLD}✗ backend/.venv not found${RESET} — create it:"
+    echo "      python3 -m venv backend/.venv && backend/.venv/bin/pip install -r backend/requirements.txt"
+    backend_rc=1
+    return
+  fi
+
+  # The API/worker/migration suites are unittest.TestCase (project convention).
+  # The evaluation suite is pytest-style (bare test functions), so it must run
+  # under pytest — unittest silently discovers 0 tests there.
+  "$PY" -m unittest \
+    backend.tests.test_api \
+    backend.tests.test_schemas \
+    backend.tests.test_exporting \
+    backend.tests.test_migrations \
+    backend.tests.test_proposals_repository \
+    backend.tests.test_worker_pipeline \
+    -v
+  local unittest_rc=$?
+
+  "$PY" -m pytest backend/evaluation/tests -q
+  local pytest_rc=$?
+
+  backend_rc=$(( unittest_rc != 0 || pytest_rc != 0 ? 1 : 0 ))
+}
+
+run_frontend() {
+  head "Frontend (TypeScript / vitest)"
+  if [ ! -d frontend/node_modules ]; then
+    say "Installing frontend deps (first run only)..."
+    npm --prefix frontend install || { frontend_rc=1; return; }
+  fi
+  npm --prefix frontend test
+  frontend_rc=$?
+}
+
+case "$which" in
+  backend)  run_backend ;;
+  frontend) run_frontend ;;
+  all|"")   run_backend; run_frontend ;;
+  *) echo "  unknown target '$which'. Use: ./test [backend|frontend]"; exit 2 ;;
+esac
+
+# ---- summary -------------------------------------------------------------
+head "Summary"
+status() { [ "$1" -eq 0 ] && echo "${BOLD}PASS${RESET}" || echo "${BOLD}FAIL${RESET}"; }
+[ "$backend_rc"  -ne -1 ] && say "backend   $(status "$backend_rc")"
+[ "$frontend_rc" -ne -1 ] && say "frontend  $(status "$frontend_rc")"
+
+# Non-zero exit if any suite that ran failed.
+if { [ "$backend_rc" -gt 0 ]; } || { [ "$frontend_rc" -gt 0 ]; }; then
+  exit 1
+fi
+say "${BOLD}All green.${RESET}"

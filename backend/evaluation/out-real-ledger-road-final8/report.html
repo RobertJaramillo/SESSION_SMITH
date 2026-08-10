@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en" data-theme="">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evaluation Report — campaign_ledger_road</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page:#f9f9f7; --surface-1:#fcfcfb; --text-primary:#0b0b0b; --text-secondary:#52514e;
+    --muted:#898781; --grid:#e1e0d9; --baseline:#c3c2b7; --border:rgba(11,11,11,0.10);
+    --series-1:#2a78d6; --series-2:#eb6834;
+    --good:#0ca30c; --bad:#d03b3b;
+  }
+  html[data-theme="dark"] {
+    color-scheme: dark;
+    --page:#0d0d0d; --surface-1:#1a1a19; --text-primary:#fff; --text-secondary:#c3c2b7;
+    --muted:#898781; --grid:#2c2c2a; --baseline:#383835; --border:rgba(255,255,255,0.10);
+    --series-1:#3987e5; --series-2:#d95926; --good:#0ca30c; --bad:#d03b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    html:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page:#0d0d0d; --surface-1:#1a1a19; --text-primary:#fff; --text-secondary:#c3c2b7;
+      --grid:#2c2c2a; --baseline:#383835; --border:rgba(255,255,255,0.10);
+      --series-1:#3987e5; --series-2:#d95926;
+    }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--page); color:var(--text-primary);
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif; line-height:1.5; }
+  .wrap { max-width:980px; margin:0 auto; padding:32px 20px 80px; }
+  header { display:flex; align-items:baseline; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  h1 { font-size:24px; margin:0 0 4px; }
+  h2 { font-size:15px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted);
+    margin:40px 0 12px; }
+  h3 { font-size:16px; margin:0; }
+  .meta { color:var(--text-secondary); font-size:14px; }
+  .sub { color:var(--text-secondary); font-size:13px; margin:2px 0 8px; }
+  .muted { color:var(--muted); }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:720px) { .grid2 { grid-template-columns:1fr; } }
+  .card { background:var(--surface-1); border:1px solid var(--border); border-radius:12px;
+    margin:0; padding:16px; }
+  .chart-svg { width:100%; height:auto; display:block; }
+  .grid { stroke:var(--grid); stroke-width:1; }
+  .baseline { stroke:var(--baseline); stroke-width:1.5; }
+  .whisker { stroke:var(--text-secondary); stroke-width:1.5; }
+  .bar { transition:opacity .12s; } .bar:hover { opacity:.82; }
+  .tick, .axlabel { fill:var(--muted); font-size:11px; font-variant-numeric:tabular-nums; }
+  .val { fill:var(--text-primary); font-size:11px; font-weight:600; font-variant-numeric:tabular-nums; }
+  .legend { display:flex; gap:16px; margin:2px 0 10px; font-size:13px; color:var(--text-secondary); }
+  .leg { display:inline-flex; align-items:center; gap:6px; }
+  .swatch { width:12px; height:12px; border-radius:3px; display:inline-block; }
+  .kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:20px 0 8px; }
+  @media (max-width:720px) { .kpi-row { grid-template-columns:repeat(2,1fr); } }
+  .kpi { background:var(--surface-1); border:1px solid var(--border); border-radius:12px; padding:14px; }
+  .kpi-label { font-size:12px; color:var(--muted); }
+  .kpi-val { font-size:30px; font-weight:700; margin:2px 0; font-variant-numeric:tabular-nums; }
+  .kpi-delta { font-size:12px; }
+  .kpi-delta.good { color:var(--good); } .kpi-delta.bad { color:var(--bad); }
+  .kpi-delta.flat { color:var(--muted); }
+  .kpi-word { color:var(--muted); }
+  table.dtable { width:100%; border-collapse:collapse; font-size:13px; margin-top:8px; }
+  .dtable th, .dtable td { text-align:right; padding:6px 8px; border-bottom:1px solid var(--grid);
+    font-variant-numeric:tabular-nums; }
+  .dtable th:first-child, .dtable td:first-child,
+  .dtable th:nth-child(2), .dtable td:nth-child(2) { text-align:left; }
+  .dtable thead th { color:var(--muted); font-weight:600; border-bottom:1.5px solid var(--baseline); }
+  details.disagreement { background:var(--surface-1); border:1px solid var(--border);
+    border-radius:10px; padding:10px 14px; margin:8px 0; }
+  details.disagreement summary { cursor:pointer; }
+  .chip { font-size:11px; color:var(--text-secondary); background:var(--grid);
+    border-radius:20px; padding:2px 8px; margin-left:6px; }
+  .toggle { font:inherit; font-size:13px; cursor:pointer; background:var(--surface-1);
+    color:var(--text-primary); border:1px solid var(--border); border-radius:8px; padding:6px 12px; }
+  .conclusion { background:var(--surface-1); border:1px solid var(--border); border-radius:12px;
+    padding:16px; font-size:14px; }
+  footer { margin-top:40px; color:var(--muted); font-size:12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Evaluation Report</h1>
+      <div class="meta">Campaign <b>campaign_ledger_road</b> · 1 run(s) per system · evaluators: openai_judge_1_gpt-4o, openai_judge_2_gpt-4o-mini</div>
+    </div>
+    <button class="toggle" onclick="toggleTheme()">Toggle light / dark</button>
+  </header>
+
+  <div class="kpi-row"><div class="kpi"><div class="kpi-label">Rubric avg (1–5)</div><div class="kpi-val">4.38</div><div class="kpi-delta good">▲ 0.12 vs baseline <span class="kpi-word">(better)</span></div></div><div class="kpi"><div class="kpi-label">Facts preserved</div><div class="kpi-val">40%</div><div class="kpi-delta good">▲ 34% vs baseline <span class="kpi-word">(better)</span></div></div><div class="kpi"><div class="kpi-label">Contradictions</div><div class="kpi-val">0.0</div><div class="kpi-delta flat">■ 0.0 vs baseline <span class="kpi-word">(same)</span></div></div></div>
+
+  <h2>System comparison</h2>
+  <div class="grid2">
+    <figure class="card"><figcaption><h3>Qualitative rubric</h3><p class="sub">Mean score across runs (1–5, higher is better). Whiskers = ± std.</p></figcaption><div class="legend"><span class="leg"><span class="swatch" style="background:var(--series-1)"></span>Our System</span><span class="leg"><span class="swatch" style="background:var(--series-2)"></span>Baseline (ChatGPT)</span></div><svg viewBox="0 0 640 320" role="img" preserveAspectRatio="xMidYMid meet" class="chart-svg"><line x1="44" y1="256.0" x2="624" y2="256.0" class="grid" /><text x="38" y="259.0" class="tick" text-anchor="end">0.0</text><line x1="44" y1="210.4" x2="624" y2="210.4" class="grid" /><text x="38" y="213.4" class="tick" text-anchor="end">1.0</text><line x1="44" y1="164.8" x2="624" y2="164.8" class="grid" /><text x="38" y="167.8" class="tick" text-anchor="end">2.0</text><line x1="44" y1="119.2" x2="624" y2="119.2" class="grid" /><text x="38" y="122.2" class="tick" text-anchor="end">3.0</text><line x1="44" y1="73.6" x2="624" y2="73.6" class="grid" /><text x="38" y="76.6" class="tick" text-anchor="end">4.0</text><line x1="44" y1="28.0" x2="624" y2="28.0" class="grid" /><text x="38" y="31.0" class="tick" text-anchor="end">5.0</text><rect x="71.5" y="28.0" width="44.0" height="228.0" rx="4" fill="var(--series-1)" class="bar"><title>Depth &amp; Completeness — 5.000 (n=1)</title></rect><text x="93.5" y="23.0" class="val" text-anchor="middle">5.0</text><rect x="117.5" y="73.6" width="44.0" height="182.4" rx="4" fill="var(--series-2)" class="bar"><title>Depth &amp; Completeness — 4.000 (n=1)</title></rect><text x="139.5" y="68.6" class="val" text-anchor="middle">4.0</text><text x="116.5" y="272.0" class="axlabel" text-anchor="middle">Depth &amp;</text><text x="116.5" y="285.0" class="axlabel" text-anchor="middle">Completeness</text><rect x="216.6" y="73.6" width="44.0" height="182.4" rx="4" fill="var(--series-1)" class="bar"><title>Internal Consistency — 4.000 (n=1)</title></rect><text x="238.5" y="68.6" class="val" text-anchor="middle">4.0</text><rect x="262.5" y="28.0" width="44.0" height="228.0" rx="4" fill="var(--series-2)" class="bar"><title>Internal Consistency — 5.000 (n=1)</title></rect><text x="284.5" y="23.0" class="val" text-anchor="middle">5.0</text><text x="261.5" y="272.0" class="axlabel" text-anchor="middle">Internal</text><text x="261.5" y="285.0" class="axlabel" text-anchor="middle">Consistency</text><rect x="361.6" y="73.6" width="44.0" height="182.4" rx="4" fill="var(--series-1)" class="bar"><title>Logical Coherence — 4.000 (n=1)</title></rect><text x="383.5" y="68.6" class="val" text-anchor="middle">4.0</text><rect x="407.5" y="73.6" width="44.0" height="182.4" rx="4" fill="var(--series-2)" class="bar"><title>Logical Coherence — 4.000 (n=1)</title></rect><text x="429.5" y="68.6" class="val" text-anchor="middle">4.0</text><text x="406.5" y="272.0" class="axlabel" text-anchor="middle">Logical</text><text x="406.5" y="285.0" class="axlabel" text-anchor="middle">Coherence</text><rect x="506.6" y="50.8" width="44.0" height="205.2" rx="4" fill="var(--series-1)" class="bar"><title>Faithfulness to Source Notes — 4.500 (n=1)</title></rect><text x="528.5" y="45.8" class="val" text-anchor="middle">4.5</text><rect x="552.5" y="73.6" width="44.0" height="182.4" rx="4" fill="var(--series-2)" class="bar"><title>Faithfulness to Source Notes — 4.000 (n=1)</title></rect><text x="574.5" y="68.6" class="val" text-anchor="middle">4.0</text><text x="551.5" y="272.0" class="axlabel" text-anchor="middle">Faithfulness to</text><text x="551.5" y="285.0" class="axlabel" text-anchor="middle">Source Notes</text><line x1="44" y1="256" x2="624" y2="256" class="baseline" /></svg></figure>
+    <figure class="card"><figcaption><h3>Fact preservation &amp; relationship accuracy</h3><p class="sub">Fraction checked against the original notes (higher is better).</p></figcaption><div class="legend"><span class="leg"><span class="swatch" style="background:var(--series-1)"></span>Our System</span><span class="leg"><span class="swatch" style="background:var(--series-2)"></span>Baseline (ChatGPT)</span></div><svg viewBox="0 0 640 320" role="img" preserveAspectRatio="xMidYMid meet" class="chart-svg"><line x1="44" y1="256.0" x2="624" y2="256.0" class="grid" /><text x="38" y="259.0" class="tick" text-anchor="end">0%</text><line x1="44" y1="210.4" x2="624" y2="210.4" class="grid" /><text x="38" y="213.4" class="tick" text-anchor="end">20%</text><line x1="44" y1="164.8" x2="624" y2="164.8" class="grid" /><text x="38" y="167.8" class="tick" text-anchor="end">40%</text><line x1="44" y1="119.2" x2="624" y2="119.2" class="grid" /><text x="38" y="122.2" class="tick" text-anchor="end">60%</text><line x1="44" y1="73.6" x2="624" y2="73.6" class="grid" /><text x="38" y="76.6" class="tick" text-anchor="end">80%</text><line x1="44" y1="28.0" x2="624" y2="28.0" class="grid" /><text x="38" y="31.0" class="tick" text-anchor="end">100%</text><rect x="99.1" y="165.0" width="88.9" height="91.0" rx="4" fill="var(--series-1)" class="bar"><title>preservation rate — 0.399 (n=1)</title></rect><text x="143.6" y="160.0" class="val" text-anchor="middle">40%</text><rect x="190.0" y="241.8" width="88.9" height="14.2" rx="4" fill="var(--series-2)" class="bar"><title>preservation rate — 0.062 (n=1)</title></rect><text x="234.4" y="236.8" class="val" text-anchor="middle">6%</text><text x="189.0" y="272.0" class="axlabel" text-anchor="middle">preservation</text><text x="189.0" y="285.0" class="axlabel" text-anchor="middle">rate</text><rect x="389.1" y="173.1" width="88.9" height="82.9" rx="4" fill="var(--series-1)" class="bar"><title>relationship accuracy — 0.364 (n=1)</title></rect><text x="433.6" y="168.1" class="val" text-anchor="middle">36%</text><rect x="480.0" y="256.0" width="88.9" height="0.0" rx="4" fill="var(--series-2)" class="bar"><title>relationship accuracy — 0.000 (n=1)</title></rect><text x="524.5" y="251.0" class="val" text-anchor="middle">0%</text><text x="479.0" y="272.0" class="axlabel" text-anchor="middle">relationship</text><text x="479.0" y="285.0" class="axlabel" text-anchor="middle">accuracy</text><line x1="44" y1="256" x2="624" y2="256" class="baseline" /></svg></figure>
+    <figure class="card"><figcaption><h3>Errors introduced (lower is better)</h3><p class="sub">Counts of contradictions vs the notes.</p></figcaption><div class="legend"><span class="leg"><span class="swatch" style="background:var(--series-1)"></span>Our System</span><span class="leg"><span class="swatch" style="background:var(--series-2)"></span>Baseline (ChatGPT)</span></div><svg viewBox="0 0 640 320" role="img" preserveAspectRatio="xMidYMid meet" class="chart-svg"><line x1="44" y1="256.0" x2="624" y2="256.0" class="grid" /><text x="38" y="259.0" class="tick" text-anchor="end">0.0</text><line x1="44" y1="210.4" x2="624" y2="210.4" class="grid" /><text x="38" y="213.4" class="tick" text-anchor="end">0.2</text><line x1="44" y1="164.8" x2="624" y2="164.8" class="grid" /><text x="38" y="167.8" class="tick" text-anchor="end">0.4</text><line x1="44" y1="119.2" x2="624" y2="119.2" class="grid" /><text x="38" y="122.2" class="tick" text-anchor="end">0.6</text><line x1="44" y1="73.6" x2="624" y2="73.6" class="grid" /><text x="38" y="76.6" class="tick" text-anchor="end">0.8</text><line x1="44" y1="28.0" x2="624" y2="28.0" class="grid" /><text x="38" y="31.0" class="tick" text-anchor="end">1.0</text><rect x="154.2" y="256.0" width="178.8" height="0.0" rx="4" fill="var(--series-1)" class="bar"><title>contradictions — 0.000 (n=1)</title></rect><text x="243.6" y="251.0" class="val" text-anchor="middle">0.0</text><rect x="335.0" y="256.0" width="178.8" height="0.0" rx="4" fill="var(--series-2)" class="bar"><title>contradictions — 0.000 (n=1)</title></rect><text x="424.4" y="251.0" class="val" text-anchor="middle">0.0</text><text x="334.0" y="272.0" class="axlabel" text-anchor="middle">contradictions</text><line x1="44" y1="256" x2="624" y2="256" class="baseline" /></svg></figure>
+    <figure class="card"><figcaption><h3>Inter-evaluator agreement</h3><p class="sub">Quadratic-weighted Cohen&#x27;s κ per criterion (1.0 = perfect). Mean quadratic-weighted kappa across criteria = 0.75 (substantial agreement). 0 (document, criterion) case(s) exceeded the disagreement threshold and are discussed individually.</p></figcaption><svg viewBox="0 0 640 320" role="img" preserveAspectRatio="xMidYMid meet" class="chart-svg"><line x1="44" y1="256.0" x2="624" y2="256.0" class="grid" /><text x="38" y="259.0" class="tick" text-anchor="end">0.00</text><line x1="44" y1="210.4" x2="624" y2="210.4" class="grid" /><text x="38" y="213.4" class="tick" text-anchor="end">0.20</text><line x1="44" y1="164.8" x2="624" y2="164.8" class="grid" /><text x="38" y="167.8" class="tick" text-anchor="end">0.40</text><line x1="44" y1="119.2" x2="624" y2="119.2" class="grid" /><text x="38" y="122.2" class="tick" text-anchor="end">0.60</text><line x1="44" y1="73.6" x2="624" y2="73.6" class="grid" /><text x="38" y="76.6" class="tick" text-anchor="end">0.80</text><line x1="44" y1="28.0" x2="624" y2="28.0" class="grid" /><text x="38" y="31.0" class="tick" text-anchor="end">1.00</text><rect x="71.5" y="28.0" width="89.9" height="228.0" rx="4" fill="var(--series-1)" class="bar"><title>Depth &amp; Completeness — 1.000 (n=1)</title></rect><text x="116.5" y="23.0" class="val" text-anchor="middle">1.00</text><text x="116.5" y="272.0" class="axlabel" text-anchor="middle">Depth &amp;</text><text x="116.5" y="285.0" class="axlabel" text-anchor="middle">Completeness</text><rect x="216.6" y="28.0" width="89.9" height="228.0" rx="4" fill="var(--series-1)" class="bar"><title>Internal Consistency — 1.000 (n=1)</title></rect><text x="261.5" y="23.0" class="val" text-anchor="middle">1.00</text><text x="261.5" y="272.0" class="axlabel" text-anchor="middle">Internal</text><text x="261.5" y="285.0" class="axlabel" text-anchor="middle">Consistency</text><rect x="361.6" y="28.0" width="89.9" height="228.0" rx="4" fill="var(--series-1)" class="bar"><title>Logical Coherence — 1.000 (n=1)</title></rect><text x="406.5" y="23.0" class="val" text-anchor="middle">1.00</text><text x="406.5" y="272.0" class="axlabel" text-anchor="middle">Logical</text><text x="406.5" y="285.0" class="axlabel" text-anchor="middle">Coherence</text><rect x="506.6" y="256.0" width="89.9" height="0.0" rx="4" fill="var(--series-1)" class="bar"><title>Faithfulness to Source Notes — 0.000 (n=1)</title></rect><text x="551.5" y="251.0" class="val" text-anchor="middle">0.00</text><text x="551.5" y="272.0" class="axlabel" text-anchor="middle">Faithfulness to</text><text x="551.5" y="285.0" class="axlabel" text-anchor="middle">Source Notes</text><line x1="44" y1="256" x2="624" y2="256" class="baseline" /></svg></figure>
+  </div>
+
+  <h2>Evaluator disagreements (deep dive)</h2>
+  <p class="muted">No evaluator disagreements exceeded the threshold.</p>
+
+  <h2>Per-document scores (blind)</h2>
+  <div class="card"><table class="dtable"><thead><tr><th>Blind ID</th><th>System</th><th>Run</th><th>Depth &amp; Completeness</th><th>Internal Consistency</th><th>Logical Coherence</th><th>Faithfulness to Source Notes</th><th>Preserved</th><th>Creative additions</th><th>Contradictions</th><th>Rel. acc</th></tr></thead><tbody><tr><td>DOC_A</td><td>Baseline</td><td>0</td><td>4.0</td><td>5.0</td><td>4.0</td><td>4.0</td><td>0.06</td><td>15.5</td><td>0.0</td><td>0.00</td></tr><tr><td>DOC_B</td><td>Our System</td><td>0</td><td>5.0</td><td>4.0</td><td>4.0</td><td>4.5</td><td>0.40</td><td>226.0</td><td>0.0</td><td>0.36</td></tr></tbody></table></div>
+
+  <h2>Conclusion</h2>
+  <div class="conclusion">Averaged over the qualitative rubric, our system scored 4.38 vs the baseline&#x27;s 4.25 (1–5). Qualitative winner: **Our system**.<br>- preservation_rate: ours 0.40 vs baseline 0.06 → favors our system.<br>- relationship_accuracy: ours 0.36 vs baseline 0.00 → favors our system.<br>- contradictions: ours 0.00 vs baseline 0.00 → favors neither (tie).<br><br>These are automated results over a small sample; the numbers should be read together with the disagreement discussions in §3.1 and, ideally, a human spot-check of the flagged cases.</div>
+
+  <footer>Generated by backend/evaluation. Charts use a CVD-validated palette;
+  identity is shown by legend + direct labels, not color alone. A table view is
+  included above for accessibility.</footer>
+</div>
+<script>
+  function toggleTheme() {
+    var el = document.documentElement;
+    var now = el.getAttribute('data-theme');
+    var next = now === 'dark' ? 'light'
+             : now === 'light' ? 'dark'
+             : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'light' : 'dark');
+    el.setAttribute('data-theme', next);
+  }
+</script>
+</body>
+</html>

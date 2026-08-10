@@ -1,0 +1,144 @@
+#!/usr/bin/env bash
+#
+# run — one-command bootstrap for the AI Campaign Orchestration stack.
+#
+# Confirms the host requirements (a container engine + docker compose), starts
+# the engine if it is installed but not running, captures an OpenAI API key into
+# a gitignored .env (optional — falls back to the offline demo provider), then
+# builds and starts the containers (Postgres + API + Caddy).
+#
+# Usage:   ./run            # bring the stack up
+#          ./run down       # stop the stack (keeps data)
+#          ./run reset      # stop + wipe the database, then rebuild
+#
+set -euo pipefail
+
+cd "$(dirname "$0")"
+
+if [ -t 1 ]; then
+  BOLD=$(tput bold 2>/dev/null || true)
+  DIM=$(tput dim 2>/dev/null || true)
+  RESET=$(tput sgr0 2>/dev/null || true)
+else
+  BOLD=""; DIM=""; RESET=""
+fi
+say()  { echo "  $*"; }
+ok()   { echo "  ${BOLD}✓${RESET} $*"; }
+warn() { echo "  ${BOLD}!${RESET} $*" >&2; }
+die()  { echo "  ${BOLD}✗ $*${RESET}" >&2; exit 1; }
+
+ENV_FILE=".env"
+
+APP_URL="http://localhost:8080"
+
+# ---- subcommands ---------------------------------------------------------
+case "${1:-up}" in
+  down)  exec docker compose down ;;
+  reset) docker compose down -v || true ;;  # falls through to a fresh up
+  up|"") : ;;
+  *) die "unknown command '${1}'. Use: ./run [up|down|reset]" ;;
+esac
+
+echo "${BOLD}AI Campaign Orchestration — bootstrap${RESET}"
+
+# ---- 1. requirements -----------------------------------------------------
+command -v docker >/dev/null 2>&1 || die "Docker CLI not found. Install a container engine:
+      brew install colima docker docker-compose && colima start
+      (or install Docker Desktop)"
+ok "docker CLI present ($(docker --version 2>/dev/null | awk '{gsub(/,/,""); print $3}'))"
+
+docker compose version >/dev/null 2>&1 || die "'docker compose' (v2) not available.
+      brew install docker-compose  (and add cliPluginsExtraDirs to ~/.docker/config.json)"
+ok "docker compose present"
+
+# ---- 2. engine running ---------------------------------------------------
+if ! docker info >/dev/null 2>&1; then
+  warn "Docker engine is not running."
+  if command -v colima >/dev/null 2>&1; then
+    say "Colima is installed — starting it (this can take a minute)..."
+    colima start --cpu 2 --memory 4
+  else
+    die "Start Docker Desktop, or install Colima:  brew install colima && colima start"
+  fi
+fi
+docker info >/dev/null 2>&1 || die "container engine still unreachable"
+ok "container engine running"
+
+# ---- 3. OpenAI API key / provider ---------------------------------------
+touch "$ENV_FILE"
+get_env() { grep -E "^$1=" "$ENV_FILE" 2>/dev/null | tail -1 | cut -d= -f2- || true; }
+set_env() {
+  local key="$1" value="$2" tmp
+  tmp=$(mktemp)
+  grep -vE "^$key=" "$ENV_FILE" 2>/dev/null > "$tmp" || true
+  echo "$key=$value" >> "$tmp"
+  mv "$tmp" "$ENV_FILE"
+}
+
+looks_like_openai_key() {
+  # Sanity check only (not a validity check against OpenAI) — catches the
+  # empty/truncated-paste failure mode (e.g. a key that saved as just "V")
+  # before it turns into a confusing 401 deep inside a background job.
+  case "$1" in
+    sk-*) [ "${#1}" -ge 20 ] ;;
+    *) return 1 ;;
+  esac
+}
+
+key="$(get_env OPENAI_API_KEY)"
+[ -z "$key" ] && [ -n "${OPENAI_API_KEY:-}" ] && key="${OPENAI_API_KEY}"
+
+if [ -n "$key" ] && ! looks_like_openai_key "$key"; then
+  warn "The OpenAI key already in .env doesn't look valid (expected it to start with 'sk-' and be reasonably long) — ignoring it."
+  key=""
+fi
+
+if [ -n "$key" ]; then
+  set_env OPENAI_API_KEY "$key"
+  set_env LLM_PROVIDER "openai"
+  ok "OpenAI API key configured (.env, gitignored) — LLM_PROVIDER=openai"
+elif [ -t 0 ]; then
+  echo
+  say "No OpenAI (ChatGPT) API key found."
+  say "Enter one to enable real AI, or press Enter to use the built-in demo provider."
+  read -rs -p "  OpenAI API key: " entered; echo
+  if [ -n "$entered" ] && ! looks_like_openai_key "$entered"; then
+    warn "That doesn't look like a real OpenAI key (expected it to start with 'sk-' and be reasonably long) — falling back to the demo provider. Re-run ./run to try entering the key again."
+    entered=""
+  fi
+  if [ -n "$entered" ]; then
+    set_env OPENAI_API_KEY "$entered"
+    set_env LLM_PROVIDER "openai"
+    ok "API key saved to .env (gitignored) — LLM_PROVIDER=openai"
+  else
+    set_env LLM_PROVIDER "demo"
+    ok "No key entered — using the offline demo provider (LLM_PROVIDER=demo)"
+  fi
+else
+  set_env LLM_PROVIDER "demo"
+  ok "No API key and no terminal to prompt — using the demo provider"
+fi
+
+# ---- 4. build + start ----------------------------------------------------
+echo
+say "Building and starting containers..."
+docker compose up -d --build
+
+# ---- 5. wait for health --------------------------------------------------
+say "Waiting for the app to become ready..."
+ready=""
+for _ in $(seq 1 60); do
+  if curl -fsS "$APP_URL/v1/healthz" >/dev/null 2>&1; then ready=1; break; fi
+  sleep 2
+done
+
+echo
+if [ -n "$ready" ]; then
+  ok "Stack is up."
+  echo "  ${BOLD}Open ${APP_URL}${RESET}"
+  echo "  ${DIM}Stop: ./run down   ·   wipe data + rebuild: ./run reset   ·   logs: docker compose logs -f api${RESET}"
+else
+  warn "Containers started but the app did not answer health checks in time."
+  echo "  Check logs:  docker compose logs -f api"
+  exit 1
+fi

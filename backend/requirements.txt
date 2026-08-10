@@ -1,0 +1,29 @@
+# Backend dependencies — AI Campaign Orchestration Platform (prototype)
+# Install:  python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
+# Python 3.11+ required.
+
+# --- Core: data contracts (schemas.py) ---
+pydantic>=2.7,<3.0
+
+# --- API layer (FastAPI) ---
+fastapi>=0.115,<1.0
+uvicorn[standard]>=0.30       # ASGI server to run the API
+
+# --- Database (PostgreSQL) ---
+psycopg[binary]>=3.1          # Postgres driver; raw SQL per DATA_MODEL.md
+python-dotenv>=1.0            # load .env in scripts / dataset loader
+
+# --- LLM providers (OPTIONAL) ---
+# The system is provider-agnostic (llm_provider.py). MockProvider/DemoProvider need
+# NONE of these; only required when LLM_PROVIDER selects a real adapter.
+openai>=1.40                 # OpenAIProvider
+# anthropic>=0.40             # AnthropicProvider (not implemented yet)
+
+# --- World export (PDF) ---
+reportlab>=4.0               # renders the world-export Markdown to PDF (backend/pdf_render.py, also
+                              # used by the scripts/render_markdown_pdf.py CLI wrapper)
+pypdf>=5.0                   # extracts text from externally supplied PDF world documents for evaluation
+
+# --- Dev / test (optional but recommended) ---
+pytest>=8.0
+# ruff>=0.6                   # linter/formatter

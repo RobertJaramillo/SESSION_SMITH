@@ -1,0 +1,2346 @@
+
+{
+  "dataset_id": "synthetic_ashes_of_kestrel_vale_10_sessions_v2",
+  "schema_note": "The world object uses the user-approved category format: each category has category_tags and entries; each entry has entry_id, note, date_created, last_updated, summary, and entry_tags.",
+  "generated_at": "2026-07-10T21:00:00Z",
+  "campaign": {
+    "campaign_id": "campaign_ashes_of_kestrel_vale",
+    "name": "Ashes of Kestrel Vale",
+    "system": "system-agnostic fantasy campaign data",
+    "status": "active_after_10_sessions",
+    "tone": [
+      "political fantasy",
+      "mystery",
+      "post-cataclysm",
+      "oath magic"
+    ],
+    "logline": "Heroes in a drowned river valley uncover that the laws protecting civilization were built to hide an engineered cataclysm."
+  },
+  "world": {
+    "world_id": "world_ashes_of_kestrel_vale",
+    "created_date": "2026-01-04T19:00:00Z",
+    "last_updated": "2026-03-12T01:00:00Z",
+    "economy": {
+      "category_tags": [
+        "tariffs",
+        "salt",
+        "trade",
+        "debt",
+        "markets"
+      ],
+      "entries": [
+        {
+          "entry_id": "economy_foundation_001",
+          "note": "Kestrel Vale uses stamped copper reeds for local trade. The Salt Guild manipulates salt access, bridge tariffs, and debt notes to control farmers, river merchants, and barge crews.",
+          "date_created": "2026-01-04T22:00:00Z",
+          "last_updated": "2026-01-05T22:00:00Z",
+          "summary": "Kestrel Vale uses stamped copper reeds for local trade. The Salt Guild manipulates salt access, bridge tariffs, and debt notes to control farmers, river merchants, and barge crews.",
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "tariffs"
+          ]
+        },
+        {
+          "entry_id": "economy_session_02_002",
+          "note": "Session 2 — The Salt Guild Ledger: The party stole a Salt Guild ledger proving illegal bridge fees. Bromm identified old clan marks in the margin that reference Bell Vault keys.",
+          "date_created": "2026-01-14T23:00:00Z",
+          "last_updated": "2026-01-15T01:00:00Z",
+          "summary": "The party stole a Salt Guild ledger proving illegal bridge fees. Bromm identified old clan marks in the margin that reference Bell Vault keys.",
+          "entry_tags": [
+            "session_02",
+            "table_notes",
+            "approved_canon"
+          ]
+        },
+        {
+          "entry_id": "economy_session_09_003",
+          "note": "Session 9 — Bridge of Black Tariffs: The party incited merchants against black tariffs and forced Ser Caldus to publicly choose lawful restraint over Iron Court orders. The bridge wardens fractured into loyalist and reform factions.",
+          "date_created": "2026-03-04T23:00:00Z",
+          "last_updated": "2026-03-05T01:00:00Z",
+          "summary": "The party incited merchants against black tariffs and forced Ser Caldus to publicly choose lawful restraint over Iron Court orders. The bridge wardens fractured into loyalist and reform factions.",
+          "entry_tags": [
+            "session_09",
+            "table_notes",
+            "pending_review"
+          ]
+        }
+      ]
+    },
+    "politics": {
+      "category_tags": [
+        "iron_court",
+        "succession",
+        "public_unrest",
+        "nobles",
+        "commoners"
+      ],
+      "entries": [
+        {
+          "entry_id": "politics_foundation_001",
+          "note": "The Iron Court rules through judges, tariff collectors, oath registrars, and noble exemptions. Public trust is weakening as the party exposes fraud and buried history.",
+          "date_created": "2026-01-04T23:00:00Z",
+          "last_updated": "2026-01-05T23:00:00Z",
+          "summary": "The Iron Court rules through judges, tariff collectors, oath registrars, and noble exemptions. Public trust is weakening as the party exposes fraud and buried history.",
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "iron_court"
+          ]
+        },
+        {
+          "entry_id": "politics_session_07_002",
+          "note": "Session 7 — Masks of the Iron Court: At a masked Iron Court gathering, the clapper exposed Lady Ilyra Vey as a pact broker. The party learned noble exceptions are purchased through secret vow ledgers.",
+          "date_created": "2026-02-18T23:00:00Z",
+          "last_updated": "2026-02-19T01:00:00Z",
+          "summary": "At a masked Iron Court gathering, the clapper exposed Lady Ilyra Vey as a pact broker. The party learned noble exceptions are purchased through secret vow ledgers.",
+          "entry_tags": [
+            "session_07",
+            "table_notes",
+            "approved_canon"
+          ]
+        }
+      ]
+    },
+    "magic_systems": {
+      "category_tags": [
+        "oath_magic",
+        "leylines",
+        "silver_resonance",
+        "forbidden_magic",
+        "rituals"
+      ],
+      "entries": [
+        {
+          "entry_id": "magic_systems_foundation_001",
+          "note": "Oath magic is powered by leylines beneath public witness stones. True oaths create silver resonance; false, coerced, or broken oaths create ash-black discord.",
+          "date_created": "2026-01-04T19:00:00Z",
+          "last_updated": "2026-01-05T19:00:00Z",
+          "summary": "Oath magic is powered by leylines beneath public witness stones. True oaths create silver resonance; false, coerced, or broken oaths create ash-black discord.",
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "oath_magic"
+          ]
+        },
+        {
+          "entry_id": "magic_systems_session_04_002",
+          "note": "Session 4 — Echoes in Saint Orra’s Chapel: Saint Orra’s chapel revealed forbidden records: oath magic changed after the Flood of Bells, binding commoners harder than nobles. Brother Pell became a cautious ally.",
+          "date_created": "2026-01-28T23:00:00Z",
+          "last_updated": "2026-01-29T01:00:00Z",
+          "summary": "Saint Orra’s chapel revealed forbidden records: oath magic changed after the Flood of Bells, binding commoners harder than nobles. Brother Pell became a cautious ally.",
+          "entry_tags": [
+            "session_04",
+            "table_notes",
+            "approved_canon"
+          ]
+        },
+        {
+          "entry_id": "magic_systems_session_08_003",
+          "note": "Session 8 — The Leyline Vow: The group performed a dangerous Leyline Vow to locate the Bell Vault door. Nyra’s voice gained permanent silver resonance, making false oaths painful to hear.",
+          "date_created": "2026-02-25T23:00:00Z",
+          "last_updated": "2026-02-26T01:00:00Z",
+          "summary": "The group performed a dangerous Leyline Vow to locate the Bell Vault door. Nyra’s voice gained permanent silver resonance, making false oaths painful to hear.",
+          "entry_tags": [
+            "session_08",
+            "table_notes",
+            "approved_canon"
+          ]
+        }
+      ]
+    },
+    "world_artifacts": {
+      "category_tags": [
+        "bell_clapper",
+        "vault_keys",
+        "relics",
+        "cursed_items",
+        "saint_orra"
+      ],
+      "entries": [
+        {
+          "entry_id": "world_artifacts_foundation_001",
+          "note": "The Drowned Bell Clapper is a cracked bronze relic from Saint Orra’s tower. It reacts to Talon’s scar and can locate sealed vault doors when rung underwater.",
+          "date_created": "2026-01-04T20:00:00Z",
+          "last_updated": "2026-01-05T20:00:00Z",
+          "summary": "The Drowned Bell Clapper is a cracked bronze relic from Saint Orra’s tower. It reacts to Talon’s scar and can locate sealed vault doors when rung underwater.",
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "bell_clapper"
+          ]
+        },
+        {
+          "entry_id": "world_artifacts_session_06_002",
+          "note": "Session 6 — The Drowned Bell Tower: The party entered the drowned bell tower, fought ash-eels, and recovered a cracked bronze bell clapper. Talon’s ash-scar burned when the clapper rang underwater.",
+          "date_created": "2026-02-11T23:00:00Z",
+          "last_updated": "2026-02-12T01:00:00Z",
+          "summary": "The party entered the drowned bell tower, fought ash-eels, and recovered a cracked bronze bell clapper. Talon’s ash-scar burned when the clapper rang underwater.",
+          "entry_tags": [
+            "session_06",
+            "table_notes",
+            "approved_canon"
+          ]
+        }
+      ]
+    },
+    "npcs": {
+      "category_tags": [
+        "ser_caldus",
+        "lady_vey",
+        "brother_pell",
+        "edda_vale",
+        "mira_quill"
+      ],
+      "entries": [
+        {
+          "entry_id": "npcs_foundation_001",
+          "note": "Ser Caldus Vorn is an honorable bridge captain trapped by debt and duty. Lady Ilyra Vey is an Iron Court patron who brokers illegal pacts. Brother Pell protects forbidden chapel records.",
+          "date_created": "2026-01-04T21:00:00Z",
+          "last_updated": "2026-01-05T21:00:00Z",
+          "summary": "Ser Caldus Vorn is an honorable bridge captain trapped by debt and duty. Lady Ilyra Vey is an Iron Court patron who brokers illegal pacts. Brother Pell protects forbidden chapel records.",
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "ser_caldus"
+          ]
+        },
+        {
+          "entry_id": "npcs_session_03_002",
+          "note": "Session 3 — Trial Under the River Oath: Mira used a River Oath loophole in court. Nyra heard false testimony as broken music, proving oath magic can reveal coerced lies but not safely in public.",
+          "date_created": "2026-01-21T23:00:00Z",
+          "last_updated": "2026-01-22T01:00:00Z",
+          "summary": "Mira used a River Oath loophole in court. Nyra heard false testimony as broken music, proving oath magic can reveal coerced lies but not safely in public.",
+          "entry_tags": [
+            "session_03",
+            "table_notes",
+            "approved_canon"
+          ]
+        },
+        {
+          "entry_id": "npcs_session_07_003",
+          "note": "Session 7 — Masks of the Iron Court: At a masked Iron Court gathering, the clapper exposed Lady Ilyra Vey as a pact broker. The party learned noble exceptions are purchased through secret vow ledgers.",
+          "date_created": "2026-02-18T23:00:00Z",
+          "last_updated": "2026-02-19T01:00:00Z",
+          "summary": "At a masked Iron Court gathering, the clapper exposed Lady Ilyra Vey as a pact broker. The party learned noble exceptions are purchased through secret vow ledgers.",
+          "entry_tags": [
+            "session_07",
+            "table_notes",
+            "approved_canon"
+          ]
+        }
+      ]
+    },
+    "government_organizations": {
+      "category_tags": [
+        "iron_court",
+        "bridge_wardens",
+        "oath_registrars",
+        "tariff_ministry",
+        "judges"
+      ],
+      "entries": [
+        {
+          "entry_id": "government_organizations_foundation_001",
+          "note": "The Iron Court contains judges, bridge wardens, tariff ministers, and oath registrars. It claims legitimacy from the first Concord after the Flood of Bells.",
+          "date_created": "2026-01-04T22:00:00Z",
+          "last_updated": "2026-01-05T22:00:00Z",
+          "summary": "The Iron Court contains judges, bridge wardens, tariff ministers, and oath registrars. It claims legitimacy from the first Concord after the Flood of Bells.",
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "iron_court"
+          ]
+        },
+        {
+          "entry_id": "government_organizations_session_09_002",
+          "note": "Session 9 — Bridge of Black Tariffs: The party incited merchants against black tariffs and forced Ser Caldus to publicly choose lawful restraint over Iron Court orders. The bridge wardens fractured into loyalist and reform factions.",
+          "date_created": "2026-03-04T23:00:00Z",
+          "last_updated": "2026-03-05T01:00:00Z",
+          "summary": "The party incited merchants against black tariffs and forced Ser Caldus to publicly choose lawful restraint over Iron Court orders. The bridge wardens fractured into loyalist and reform factions.",
+          "entry_tags": [
+            "session_09",
+            "table_notes",
+            "pending_review"
+          ]
+        }
+      ]
+    },
+    "non_government_organizations": {
+      "category_tags": [
+        "salt_guild",
+        "saint_orra_remnant",
+        "smugglers",
+        "merchant_cartel",
+        "chapel_network"
+      ],
+      "entries": [
+        {
+          "entry_id": "non_government_organizations_foundation_001",
+          "note": "The Salt Guild controls storage, barges, and smuggling routes. Saint Orra’s Remnant is an underground chapel network preserving forbidden records and hiding oathbreakers.",
+          "date_created": "2026-01-04T23:00:00Z",
+          "last_updated": "2026-01-05T23:00:00Z",
+          "summary": "The Salt Guild controls storage, barges, and smuggling routes. Saint Orra’s Remnant is an underground chapel network preserving forbidden records and hiding oathbreakers.",
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "salt_guild"
+          ]
+        },
+        {
+          "entry_id": "non_government_organizations_session_02_002",
+          "note": "Session 2 — The Salt Guild Ledger: The party stole a Salt Guild ledger proving illegal bridge fees. Bromm identified old clan marks in the margin that reference Bell Vault keys.",
+          "date_created": "2026-01-14T23:00:00Z",
+          "last_updated": "2026-01-15T01:00:00Z",
+          "summary": "The party stole a Salt Guild ledger proving illegal bridge fees. Bromm identified old clan marks in the margin that reference Bell Vault keys.",
+          "entry_tags": [
+            "session_02",
+            "table_notes",
+            "approved_canon"
+          ]
+        },
+        {
+          "entry_id": "non_government_organizations_session_04_003",
+          "note": "Session 4 — Echoes in Saint Orra’s Chapel: Saint Orra’s chapel revealed forbidden records: oath magic changed after the Flood of Bells, binding commoners harder than nobles. Brother Pell became a cautious ally.",
+          "date_created": "2026-01-28T23:00:00Z",
+          "last_updated": "2026-01-29T01:00:00Z",
+          "summary": "Saint Orra’s chapel revealed forbidden records: oath magic changed after the Flood of Bells, binding commoners harder than nobles. Brother Pell became a cautious ally.",
+          "entry_tags": [
+            "session_04",
+            "table_notes",
+            "approved_canon"
+          ]
+        }
+      ]
+    },
+    "laws": {
+      "category_tags": [
+        "river_oath",
+        "tariffs",
+        "contracts",
+        "exceptions",
+        "punishments"
+      ],
+      "entries": [
+        {
+          "entry_id": "laws_foundation_001",
+          "note": "The River Oath makes spoken contracts legally binding before witness stones. Nobles can buy sealed exceptions, while commoners face asset seizure, ash-branding, or imprisonment.",
+          "date_created": "2026-01-04T19:00:00Z",
+          "last_updated": "2026-01-05T19:00:00Z",
+          "summary": "The River Oath makes spoken contracts legally binding before witness stones. Nobles can buy sealed exceptions, while commoners face asset seizure, ash-branding, or imprisonment.",
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "river_oath"
+          ]
+        },
+        {
+          "entry_id": "laws_session_03_002",
+          "note": "Session 3 — Trial Under the River Oath: Mira used a River Oath loophole in court. Nyra heard false testimony as broken music, proving oath magic can reveal coerced lies but not safely in public.",
+          "date_created": "2026-01-21T23:00:00Z",
+          "last_updated": "2026-01-22T01:00:00Z",
+          "summary": "Mira used a River Oath loophole in court. Nyra heard false testimony as broken music, proving oath magic can reveal coerced lies but not safely in public.",
+          "entry_tags": [
+            "session_03",
+            "table_notes",
+            "approved_canon"
+          ]
+        }
+      ]
+    },
+    "inhabitants": {
+      "category_tags": [
+        "farmers",
+        "barge_crews",
+        "scribes",
+        "salt_workers",
+        "hill_clans"
+      ],
+      "entries": [
+        {
+          "entry_id": "inhabitants_foundation_001",
+          "note": "Kestrel Vale inhabitants include reed farmers, salt workers, barge crews, chapel scribes, displaced hill clans, and bridge wardens. River bells regulate curfew, flood warnings, and market openings.",
+          "date_created": "2026-01-04T20:00:00Z",
+          "last_updated": "2026-01-05T20:00:00Z",
+          "summary": "Kestrel Vale inhabitants include reed farmers, salt workers, barge crews, chapel scribes, displaced hill clans, and bridge wardens. River bells regulate curfew, flood warnings, and market openings.",
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "farmers"
+          ]
+        }
+      ]
+    },
+    "ecosystems": {
+      "category_tags": [
+        "ash_eels",
+        "drowned_lowlands",
+        "reed_wolves",
+        "mirror_herons",
+        "fungal_blooms"
+      ],
+      "entries": [
+        {
+          "entry_id": "ecosystems_foundation_001",
+          "note": "The drowned lowlands contain ash-eels, reed wolves, mirror herons, and oath-stone fungal blooms. Floodwater carries ash after storms even when no fire is nearby.",
+          "date_created": "2026-01-04T21:00:00Z",
+          "last_updated": "2026-01-05T21:00:00Z",
+          "summary": "The drowned lowlands contain ash-eels, reed wolves, mirror herons, and oath-stone fungal blooms. Floodwater carries ash after storms even when no fire is nearby.",
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "ash_eels"
+          ]
+        },
+        {
+          "entry_id": "ecosystems_session_06_002",
+          "note": "Session 6 — The Drowned Bell Tower: The party entered the drowned bell tower, fought ash-eels, and recovered a cracked bronze bell clapper. Talon’s ash-scar burned when the clapper rang underwater.",
+          "date_created": "2026-02-11T23:00:00Z",
+          "last_updated": "2026-02-12T01:00:00Z",
+          "summary": "The party entered the drowned bell tower, fought ash-eels, and recovered a cracked bronze bell clapper. Talon’s ash-scar burned when the clapper rang underwater.",
+          "entry_tags": [
+            "session_06",
+            "table_notes",
+            "approved_canon"
+          ]
+        }
+      ]
+    },
+    "cataclysmic_events": {
+      "category_tags": [
+        "flood_of_bells",
+        "first_concord",
+        "engineered_disaster",
+        "drowned_capital",
+        "history_erasure"
+      ],
+      "entries": [
+        {
+          "entry_id": "cataclysmic_events_foundation_001",
+          "note": "The Flood of Bells drowned the old capital 91 years ago. Official doctrine calls it divine punishment, but hidden records suggest the first Concord engineered it.",
+          "date_created": "2026-01-04T22:00:00Z",
+          "last_updated": "2026-01-05T22:00:00Z",
+          "summary": "The Flood of Bells drowned the old capital 91 years ago. Official doctrine calls it divine punishment, but hidden records suggest the first Concord engineered it.",
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "flood_of_bells"
+          ]
+        },
+        {
+          "entry_id": "cataclysmic_events_session_10_002",
+          "note": "Session 10 — The Bell Vault Opens: The Bell Vault opened with Bromm’s clan key. Records inside showed the first Concord engineered the cataclysm to seize power and then rewrote law, history, and oath magic.",
+          "date_created": "2026-03-11T23:00:00Z",
+          "last_updated": "2026-03-12T01:00:00Z",
+          "summary": "The Bell Vault opened with Bromm’s clan key. Records inside showed the first Concord engineered the cataclysm to seize power and then rewrote law, history, and oath magic.",
+          "entry_tags": [
+            "session_10",
+            "table_notes",
+            "pending_review"
+          ]
+        }
+      ]
+    },
+    "general_overview": {
+      "category_tags": [
+        "campaign_premise",
+        "tone",
+        "core_conflict",
+        "memory",
+        "canon"
+      ],
+      "entries": [
+        {
+          "entry_id": "general_overview_foundation_001",
+          "note": "Ashes of Kestrel Vale is a political fantasy campaign about law, memory, class pressure, and commoners reclaiming truth from institutions that weaponize oaths.",
+          "date_created": "2026-01-04T23:00:00Z",
+          "last_updated": "2026-01-05T23:00:00Z",
+          "summary": "Ashes of Kestrel Vale is a political fantasy campaign about law, memory, class pressure, and commoners reclaiming truth from institutions that weaponize oaths.",
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "campaign_premise"
+          ]
+        },
+        {
+          "entry_id": "general_overview_session_01_002",
+          "note": "Session 1 — Ash Rain at Kestrel Gate: The party arrived at Kestrel Gate during unnatural ash rain. They learned bridge tariffs are crushing commoners and that the drowned bell is treated as both religious warning and political taboo.",
+          "date_created": "2026-01-07T23:00:00Z",
+          "last_updated": "2026-01-08T01:00:00Z",
+          "summary": "The party arrived at Kestrel Gate during unnatural ash rain. They learned bridge tariffs are crushing commoners and that the drowned bell is treated as both religious warning and political taboo.",
+          "entry_tags": [
+            "session_01",
+            "table_notes",
+            "approved_canon"
+          ]
+        }
+      ]
+    },
+    "races": {
+      "category_tags": [
+        "humans",
+        "dwarves",
+        "half_elves",
+        "tieflings",
+        "riverfolk"
+      ],
+      "entries": [
+        {
+          "entry_id": "races_foundation_001",
+          "note": "Humans dominate river towns. Dwarven hill clans hold old vault craft. Half-elves preserve chapel scholarship. Tieflings are stigmatized as oath-discord carriers.",
+          "date_created": "2026-01-04T19:00:00Z",
+          "last_updated": "2026-01-05T19:00:00Z",
+          "summary": "Humans dominate river towns. Dwarven hill clans hold old vault craft. Half-elves preserve chapel scholarship. Tieflings are stigmatized as oath-discord carriers.",
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "humans"
+          ]
+        }
+      ]
+    },
+    "jobs_and_roles": {
+      "category_tags": [
+        "bridge_wardens",
+        "oath_registrars",
+        "bell_divers",
+        "keywrights",
+        "salt_factors"
+      ],
+      "entries": [
+        {
+          "entry_id": "jobs_and_roles_foundation_001",
+          "note": "Important roles include bridge wardens, oath registrars, salt factors, bell divers, flood tunnel guides, chapel archivists, reed farmers, and clan keywrights.",
+          "date_created": "2026-01-04T20:00:00Z",
+          "last_updated": "2026-01-05T20:00:00Z",
+          "summary": "Important roles include bridge wardens, oath registrars, salt factors, bell divers, flood tunnel guides, chapel archivists, reed farmers, and clan keywrights.",
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "bridge_wardens"
+          ]
+        }
+      ]
+    },
+    "technology_systems": {
+      "category_tags": [
+        "river_locks",
+        "bell_pumps",
+        "oath_stones",
+        "alchemical_lanterns",
+        "vault_doors"
+      ],
+      "entries": [
+        {
+          "entry_id": "technology_systems_foundation_001",
+          "note": "Technology includes river locks, mechanical bell pumps, waterlogged vault doors, alchemical lanterns, salt-preservation engines, and oath stones.",
+          "date_created": "2026-01-04T21:00:00Z",
+          "last_updated": "2026-01-05T21:00:00Z",
+          "summary": "Technology includes river locks, mechanical bell pumps, waterlogged vault doors, alchemical lanterns, salt-preservation engines, and oath stones.",
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "river_locks"
+          ]
+        },
+        {
+          "entry_id": "technology_systems_session_05_002",
+          "note": "Session 5 — The Smuggler Map: A smuggler map exposed flood tunnels under the old bell tower and a hidden Iron Court supply route. Ser Caldus warned the party to stop before his superiors noticed.",
+          "date_created": "2026-02-04T23:00:00Z",
+          "last_updated": "2026-02-05T01:00:00Z",
+          "summary": "A smuggler map exposed flood tunnels under the old bell tower and a hidden Iron Court supply route. Ser Caldus warned the party to stop before his superiors noticed.",
+          "entry_tags": [
+            "session_05",
+            "table_notes",
+            "approved_canon"
+          ]
+        }
+      ]
+    },
+    "regions": {
+      "category_tags": [
+        "kestrel_gate",
+        "saint_orras_chapel",
+        "black_tariff_bridge",
+        "drowned_lowlands",
+        "bell_tower"
+      ],
+      "entries": [
+        {
+          "entry_id": "regions_foundation_001",
+          "note": "Key places include Kestrel Gate, Black Tariff Bridge, Saint Orra’s Chapel, the drowned lowlands, the Old Bell Tower, and the hidden Bell Vault.",
+          "date_created": "2026-01-04T22:00:00Z",
+          "last_updated": "2026-01-05T22:00:00Z",
+          "summary": "Key places include Kestrel Gate, Black Tariff Bridge, Saint Orra’s Chapel, the drowned lowlands, the Old Bell Tower, and the hidden Bell Vault.",
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "kestrel_gate"
+          ]
+        },
+        {
+          "entry_id": "regions_session_01_002",
+          "note": "Session 1 — Ash Rain at Kestrel Gate: The party arrived at Kestrel Gate during unnatural ash rain. They learned bridge tariffs are crushing commoners and that the drowned bell is treated as both religious warning and political taboo.",
+          "date_created": "2026-01-07T23:00:00Z",
+          "last_updated": "2026-01-08T01:00:00Z",
+          "summary": "The party arrived at Kestrel Gate during unnatural ash rain. They learned bridge tariffs are crushing commoners and that the drowned bell is treated as both religious warning and political taboo.",
+          "entry_tags": [
+            "session_01",
+            "table_notes",
+            "approved_canon"
+          ]
+        },
+        {
+          "entry_id": "regions_session_05_003",
+          "note": "Session 5 — The Smuggler Map: A smuggler map exposed flood tunnels under the old bell tower and a hidden Iron Court supply route. Ser Caldus warned the party to stop before his superiors noticed.",
+          "date_created": "2026-02-04T23:00:00Z",
+          "last_updated": "2026-02-05T01:00:00Z",
+          "summary": "A smuggler map exposed flood tunnels under the old bell tower and a hidden Iron Court supply route. Ser Caldus warned the party to stop before his superiors noticed.",
+          "entry_tags": [
+            "session_05",
+            "table_notes",
+            "approved_canon"
+          ]
+        }
+      ]
+    },
+    "era": {
+      "category_tags": [
+        "year_91_after_flood",
+        "concord_era",
+        "post_cataclysm",
+        "reedwane",
+        "official_history"
+      ],
+      "entries": [
+        {
+          "entry_id": "era_foundation_001",
+          "note": "The campaign is set in Year 91 After the Flood during the late Concord Era, when official history is beginning to fracture.",
+          "date_created": "2026-01-04T23:00:00Z",
+          "last_updated": "2026-01-05T23:00:00Z",
+          "summary": "The campaign is set in Year 91 After the Flood during the late Concord Era, when official history is beginning to fracture.",
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "year_91_after_flood"
+          ]
+        },
+        {
+          "entry_id": "era_session_10_002",
+          "note": "Session 10 — The Bell Vault Opens: The Bell Vault opened with Bromm’s clan key. Records inside showed the first Concord engineered the cataclysm to seize power and then rewrote law, history, and oath magic.",
+          "date_created": "2026-03-11T23:00:00Z",
+          "last_updated": "2026-03-12T01:00:00Z",
+          "summary": "The Bell Vault opened with Bromm’s clan key. Records inside showed the first Concord engineered the cataclysm to seize power and then rewrote law, history, and oath magic.",
+          "entry_tags": [
+            "session_10",
+            "table_notes",
+            "pending_review"
+          ]
+        }
+      ]
+    },
+    "player_characters": {
+      "category_tags": [
+        "talon",
+        "mira",
+        "bromm",
+        "nyra",
+        "pc_hooks"
+      ],
+      "entries": [
+        {
+          "entry_id": "player_characters_foundation_001",
+          "note": "Talon carries an ash-scar pact. Mira seeks erased records. Bromm has clan keywright heritage. Nyra hears oath lies as musical dissonance.",
+          "date_created": "2026-01-04T19:00:00Z",
+          "last_updated": "2026-01-05T19:00:00Z",
+          "summary": "Talon carries an ash-scar pact. Mira seeks erased records. Bromm has clan keywright heritage. Nyra hears oath lies as musical dissonance.",
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "talon"
+          ]
+        },
+        {
+          "entry_id": "player_characters_session_01_002",
+          "note": "Session 1 — Ash Rain at Kestrel Gate: The party arrived at Kestrel Gate during unnatural ash rain. They learned bridge tariffs are crushing commoners and that the drowned bell is treated as both religious warning and political taboo.",
+          "date_created": "2026-01-07T23:00:00Z",
+          "last_updated": "2026-01-08T01:00:00Z",
+          "summary": "The party arrived at Kestrel Gate during unnatural ash rain. They learned bridge tariffs are crushing commoners and that the drowned bell is treated as both religious warning and political taboo.",
+          "entry_tags": [
+            "session_01",
+            "table_notes",
+            "approved_canon"
+          ]
+        },
+        {
+          "entry_id": "player_characters_session_02_003",
+          "note": "Session 2 — The Salt Guild Ledger: The party stole a Salt Guild ledger proving illegal bridge fees. Bromm identified old clan marks in the margin that reference Bell Vault keys.",
+          "date_created": "2026-01-14T23:00:00Z",
+          "last_updated": "2026-01-15T01:00:00Z",
+          "summary": "The party stole a Salt Guild ledger proving illegal bridge fees. Bromm identified old clan marks in the margin that reference Bell Vault keys.",
+          "entry_tags": [
+            "session_02",
+            "table_notes",
+            "approved_canon"
+          ]
+        },
+        {
+          "entry_id": "player_characters_session_03_004",
+          "note": "Session 3 — Trial Under the River Oath: Mira used a River Oath loophole in court. Nyra heard false testimony as broken music, proving oath magic can reveal coerced lies but not safely in public.",
+          "date_created": "2026-01-21T23:00:00Z",
+          "last_updated": "2026-01-22T01:00:00Z",
+          "summary": "Mira used a River Oath loophole in court. Nyra heard false testimony as broken music, proving oath magic can reveal coerced lies but not safely in public.",
+          "entry_tags": [
+            "session_03",
+            "table_notes",
+            "approved_canon"
+          ]
+        },
+        {
+          "entry_id": "player_characters_session_04_005",
+          "note": "Session 4 — Echoes in Saint Orra’s Chapel: Saint Orra’s chapel revealed forbidden records: oath magic changed after the Flood of Bells, binding commoners harder than nobles. Brother Pell became a cautious ally.",
+          "date_created": "2026-01-28T23:00:00Z",
+          "last_updated": "2026-01-29T01:00:00Z",
+          "summary": "Saint Orra’s chapel revealed forbidden records: oath magic changed after the Flood of Bells, binding commoners harder than nobles. Brother Pell became a cautious ally.",
+          "entry_tags": [
+            "session_04",
+            "table_notes",
+            "approved_canon"
+          ]
+        },
+        {
+          "entry_id": "player_characters_session_05_006",
+          "note": "Session 5 — The Smuggler Map: A smuggler map exposed flood tunnels under the old bell tower and a hidden Iron Court supply route. Ser Caldus warned the party to stop before his superiors noticed.",
+          "date_created": "2026-02-04T23:00:00Z",
+          "last_updated": "2026-02-05T01:00:00Z",
+          "summary": "A smuggler map exposed flood tunnels under the old bell tower and a hidden Iron Court supply route. Ser Caldus warned the party to stop before his superiors noticed.",
+          "entry_tags": [
+            "session_05",
+            "table_notes",
+            "approved_canon"
+          ]
+        },
+        {
+          "entry_id": "player_characters_session_06_007",
+          "note": "Session 6 — The Drowned Bell Tower: The party entered the drowned bell tower, fought ash-eels, and recovered a cracked bronze bell clapper. Talon’s ash-scar burned when the clapper rang underwater.",
+          "date_created": "2026-02-11T23:00:00Z",
+          "last_updated": "2026-02-12T01:00:00Z",
+          "summary": "The party entered the drowned bell tower, fought ash-eels, and recovered a cracked bronze bell clapper. Talon’s ash-scar burned when the clapper rang underwater.",
+          "entry_tags": [
+            "session_06",
+            "table_notes",
+            "approved_canon"
+          ]
+        },
+        {
+          "entry_id": "player_characters_session_07_008",
+          "note": "Session 7 — Masks of the Iron Court: At a masked Iron Court gathering, the clapper exposed Lady Ilyra Vey as a pact broker. The party learned noble exceptions are purchased through secret vow ledgers.",
+          "date_created": "2026-02-18T23:00:00Z",
+          "last_updated": "2026-02-19T01:00:00Z",
+          "summary": "At a masked Iron Court gathering, the clapper exposed Lady Ilyra Vey as a pact broker. The party learned noble exceptions are purchased through secret vow ledgers.",
+          "entry_tags": [
+            "session_07",
+            "table_notes",
+            "approved_canon"
+          ]
+        },
+        {
+          "entry_id": "player_characters_session_08_009",
+          "note": "Session 8 — The Leyline Vow: The group performed a dangerous Leyline Vow to locate the Bell Vault door. Nyra’s voice gained permanent silver resonance, making false oaths painful to hear.",
+          "date_created": "2026-02-25T23:00:00Z",
+          "last_updated": "2026-02-26T01:00:00Z",
+          "summary": "The group performed a dangerous Leyline Vow to locate the Bell Vault door. Nyra’s voice gained permanent silver resonance, making false oaths painful to hear.",
+          "entry_tags": [
+            "session_08",
+            "table_notes",
+            "approved_canon"
+          ]
+        },
+        {
+          "entry_id": "player_characters_session_08_010",
+          "note": "Session 8 — The Leyline Vow: The group performed a dangerous Leyline Vow to locate the Bell Vault door. Nyra’s voice gained permanent silver resonance, making false oaths painful to hear.",
+          "date_created": "2026-02-25T23:00:00Z",
+          "last_updated": "2026-02-26T01:00:00Z",
+          "summary": "The group performed a dangerous Leyline Vow to locate the Bell Vault door. Nyra’s voice gained permanent silver resonance, making false oaths painful to hear.",
+          "entry_tags": [
+            "session_08",
+            "table_notes",
+            "approved_canon"
+          ]
+        },
+        {
+          "entry_id": "player_characters_session_09_011",
+          "note": "Session 9 — Bridge of Black Tariffs: The party incited merchants against black tariffs and forced Ser Caldus to publicly choose lawful restraint over Iron Court orders. The bridge wardens fractured into loyalist and reform factions.",
+          "date_created": "2026-03-04T23:00:00Z",
+          "last_updated": "2026-03-05T01:00:00Z",
+          "summary": "The party incited merchants against black tariffs and forced Ser Caldus to publicly choose lawful restraint over Iron Court orders. The bridge wardens fractured into loyalist and reform factions.",
+          "entry_tags": [
+            "session_09",
+            "table_notes",
+            "pending_review"
+          ]
+        },
+        {
+          "entry_id": "player_characters_session_10_012",
+          "note": "Session 10 — The Bell Vault Opens: The Bell Vault opened with Bromm’s clan key. Records inside showed the first Concord engineered the cataclysm to seize power and then rewrote law, history, and oath magic.",
+          "date_created": "2026-03-11T23:00:00Z",
+          "last_updated": "2026-03-12T01:00:00Z",
+          "summary": "The Bell Vault opened with Bromm’s clan key. Records inside showed the first Concord engineered the cataclysm to seize power and then rewrote law, history, and oath magic.",
+          "entry_tags": [
+            "session_10",
+            "table_notes",
+            "pending_review"
+          ]
+        }
+      ]
+    }
+  },
+  "sessions": [
+    {
+      "session_id": "session_01",
+      "session_number": 1,
+      "title": "Ash Rain at Kestrel Gate",
+      "played_at": "2026-01-07T19:00:00Z",
+      "status": "completed",
+      "raw_notes": "Raw GM notes: The party arrived at Kestrel Gate during unnatural ash rain. They learned bridge tariffs are crushing commoners and that the drowned bell is treated as both religious warning and political taboo. Unresolved hooks and category updates were added to the world document entries.",
+      "summary": "The party arrived at Kestrel Gate during unnatural ash rain. They learned bridge tariffs are crushing commoners and that the drowned bell is treated as both religious warning and political taboo.",
+      "related_entry_ids": [
+        "general_overview_session_01_002",
+        "regions_session_01_002",
+        "player_characters_session_01_002"
+      ]
+    },
+    {
+      "session_id": "session_02",
+      "session_number": 2,
+      "title": "The Salt Guild Ledger",
+      "played_at": "2026-01-14T19:00:00Z",
+      "status": "completed",
+      "raw_notes": "Raw GM notes: The party stole a Salt Guild ledger proving illegal bridge fees. Bromm identified old clan marks in the margin that reference Bell Vault keys. Unresolved hooks and category updates were added to the world document entries.",
+      "summary": "The party stole a Salt Guild ledger proving illegal bridge fees. Bromm identified old clan marks in the margin that reference Bell Vault keys.",
+      "related_entry_ids": [
+        "economy_session_02_002",
+        "non_government_organizations_session_02_002",
+        "player_characters_session_02_003"
+      ]
+    },
+    {
+      "session_id": "session_03",
+      "session_number": 3,
+      "title": "Trial Under the River Oath",
+      "played_at": "2026-01-21T19:00:00Z",
+      "status": "completed",
+      "raw_notes": "Raw GM notes: Mira used a River Oath loophole in court. Nyra heard false testimony as broken music, proving oath magic can reveal coerced lies but not safely in public. Unresolved hooks and category updates were added to the world document entries.",
+      "summary": "Mira used a River Oath loophole in court. Nyra heard false testimony as broken music, proving oath magic can reveal coerced lies but not safely in public.",
+      "related_entry_ids": [
+        "npcs_session_03_002",
+        "laws_session_03_002",
+        "player_characters_session_03_004"
+      ]
+    },
+    {
+      "session_id": "session_04",
+      "session_number": 4,
+      "title": "Echoes in Saint Orra’s Chapel",
+      "played_at": "2026-01-28T19:00:00Z",
+      "status": "completed",
+      "raw_notes": "Raw GM notes: Saint Orra’s chapel revealed forbidden records: oath magic changed after the Flood of Bells, binding commoners harder than nobles. Brother Pell became a cautious ally. Unresolved hooks and category updates were added to the world document entries.",
+      "summary": "Saint Orra’s chapel revealed forbidden records: oath magic changed after the Flood of Bells, binding commoners harder than nobles. Brother Pell became a cautious ally.",
+      "related_entry_ids": [
+        "magic_systems_session_04_002",
+        "non_government_organizations_session_04_003",
+        "player_characters_session_04_005"
+      ]
+    },
+    {
+      "session_id": "session_05",
+      "session_number": 5,
+      "title": "The Smuggler Map",
+      "played_at": "2026-02-04T19:00:00Z",
+      "status": "completed",
+      "raw_notes": "Raw GM notes: A smuggler map exposed flood tunnels under the old bell tower and a hidden Iron Court supply route. Ser Caldus warned the party to stop before his superiors noticed. Unresolved hooks and category updates were added to the world document entries.",
+      "summary": "A smuggler map exposed flood tunnels under the old bell tower and a hidden Iron Court supply route. Ser Caldus warned the party to stop before his superiors noticed.",
+      "related_entry_ids": [
+        "technology_systems_session_05_002",
+        "regions_session_05_003",
+        "player_characters_session_05_006"
+      ]
+    },
+    {
+      "session_id": "session_06",
+      "session_number": 6,
+      "title": "The Drowned Bell Tower",
+      "played_at": "2026-02-11T19:00:00Z",
+      "status": "completed",
+      "raw_notes": "Raw GM notes: The party entered the drowned bell tower, fought ash-eels, and recovered a cracked bronze bell clapper. Talon’s ash-scar burned when the clapper rang underwater. Unresolved hooks and category updates were added to the world document entries.",
+      "summary": "The party entered the drowned bell tower, fought ash-eels, and recovered a cracked bronze bell clapper. Talon’s ash-scar burned when the clapper rang underwater.",
+      "related_entry_ids": [
+        "world_artifacts_session_06_002",
+        "ecosystems_session_06_002",
+        "player_characters_session_06_007"
+      ]
+    },
+    {
+      "session_id": "session_07",
+      "session_number": 7,
+      "title": "Masks of the Iron Court",
+      "played_at": "2026-02-18T19:00:00Z",
+      "status": "completed",
+      "raw_notes": "Raw GM notes: At a masked Iron Court gathering, the clapper exposed Lady Ilyra Vey as a pact broker. The party learned noble exceptions are purchased through secret vow ledgers. Unresolved hooks and category updates were added to the world document entries.",
+      "summary": "At a masked Iron Court gathering, the clapper exposed Lady Ilyra Vey as a pact broker. The party learned noble exceptions are purchased through secret vow ledgers.",
+      "related_entry_ids": [
+        "politics_session_07_002",
+        "npcs_session_07_003",
+        "player_characters_session_07_008"
+      ]
+    },
+    {
+      "session_id": "session_08",
+      "session_number": 8,
+      "title": "The Leyline Vow",
+      "played_at": "2026-02-25T19:00:00Z",
+      "status": "completed",
+      "raw_notes": "Raw GM notes: The group performed a dangerous Leyline Vow to locate the Bell Vault door. Nyra’s voice gained permanent silver resonance, making false oaths painful to hear. Unresolved hooks and category updates were added to the world document entries.",
+      "summary": "The group performed a dangerous Leyline Vow to locate the Bell Vault door. Nyra’s voice gained permanent silver resonance, making false oaths painful to hear.",
+      "related_entry_ids": [
+        "magic_systems_session_08_003",
+        "player_characters_session_08_009",
+        "player_characters_session_08_010"
+      ]
+    },
+    {
+      "session_id": "session_09",
+      "session_number": 9,
+      "title": "Bridge of Black Tariffs",
+      "played_at": "2026-03-04T19:00:00Z",
+      "status": "completed",
+      "raw_notes": "Raw GM notes: The party incited merchants against black tariffs and forced Ser Caldus to publicly choose lawful restraint over Iron Court orders. The bridge wardens fractured into loyalist and reform factions. Unresolved hooks and category updates were added to the world document entries.",
+      "summary": "The party incited merchants against black tariffs and forced Ser Caldus to publicly choose lawful restraint over Iron Court orders. The bridge wardens fractured into loyalist and reform factions.",
+      "related_entry_ids": [
+        "economy_session_09_003",
+        "government_organizations_session_09_002",
+        "player_characters_session_09_011"
+      ]
+    },
+    {
+      "session_id": "session_10",
+      "session_number": 10,
+      "title": "The Bell Vault Opens",
+      "played_at": "2026-03-11T19:00:00Z",
+      "status": "completed",
+      "raw_notes": "Raw GM notes: The Bell Vault opened with Bromm’s clan key. Records inside showed the first Concord engineered the cataclysm to seize power and then rewrote law, history, and oath magic. Unresolved hooks and category updates were added to the world document entries.",
+      "summary": "The Bell Vault opened with Bromm’s clan key. Records inside showed the first Concord engineered the cataclysm to seize power and then rewrote law, history, and oath magic.",
+      "related_entry_ids": [
+        "cataclysmic_events_session_10_002",
+        "era_session_10_002",
+        "player_characters_session_10_012"
+      ]
+    }
+  ],
+  "player_characters": [
+    {
+      "character_id": "pc_talon_ashvale",
+      "name": "Talon Ashvale",
+      "ancestry": "Human",
+      "role": "Pact-scarred Ranger",
+      "current_goal": "Find the source of his ash-scar pact",
+      "active_entry_tags": [
+        "talon",
+        "pc_hooks"
+      ]
+    },
+    {
+      "character_id": "pc_mira_quill",
+      "name": "Mira Quill",
+      "ancestry": "Half-Elf",
+      "role": "Archivist Wizard",
+      "current_goal": "Recover pre-cataclysm records",
+      "active_entry_tags": [
+        "mira",
+        "pc_hooks"
+      ]
+    },
+    {
+      "character_id": "pc_bromm_ironroot",
+      "name": "Bromm Ironroot",
+      "ancestry": "Dwarf",
+      "role": "Guild Fighter",
+      "current_goal": "Restore his clan keywright charter",
+      "active_entry_tags": [
+        "bromm",
+        "pc_hooks"
+      ]
+    },
+    {
+      "character_id": "pc_nyra_vel",
+      "name": "Nyra Vel",
+      "ancestry": "Tiefling",
+      "role": "Oathbound Bard",
+      "current_goal": "Expose oath magic corruption",
+      "active_entry_tags": [
+        "nyra",
+        "pc_hooks"
+      ]
+    }
+  ],
+  "ai_development_records": {
+    "review_queue_examples": [
+      {
+        "proposal_id": "proposal_session_09_bridge_wardens",
+        "source_entry_id": "government_organizations_session_09_002",
+        "proposed_summary": "Bridge wardens are now split between Iron Court loyalists and reformers after Ser Caldus refused an unlawful order.",
+        "status": "pending_review",
+        "confidence": "high"
+      },
+      {
+        "proposal_id": "proposal_session_10_first_concord",
+        "source_entry_id": "cataclysmic_events_session_10_002",
+        "proposed_summary": "Bell Vault records indicate the first Concord engineered the Flood of Bells, then rewrote law and oath magic to hide responsibility.",
+        "status": "pending_review",
+        "confidence": "high"
+      }
+    ],
+    "rag_chunk_examples": [
+      {
+        "rag_chunk_id": "rag_chunk_0001",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "economy",
+        "entry_id": "economy_foundation_001",
+        "chunk_text": "Economy: Kestrel Vale uses stamped copper reeds for local trade. The Salt Guild manipulates salt access, bridge tariffs, and debt notes to control farmers, river merchants, and barge crews.",
+        "metadata": {
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "tariffs"
+          ],
+          "date_created": "2026-01-04T22:00:00Z",
+          "last_updated": "2026-01-05T22:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.17,
+          0.28,
+          0.39,
+          0.5,
+          0.61,
+          0.72,
+          0.83,
+          0.94
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0002",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "economy",
+        "entry_id": "economy_session_02_002",
+        "chunk_text": "Economy: The party stole a Salt Guild ledger proving illegal bridge fees. Bromm identified old clan marks in the margin that reference Bell Vault keys.",
+        "metadata": {
+          "entry_tags": [
+            "session_02",
+            "table_notes",
+            "approved_canon"
+          ],
+          "date_created": "2026-01-14T23:00:00Z",
+          "last_updated": "2026-01-15T01:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.34,
+          0.45,
+          0.56,
+          0.67,
+          0.78,
+          0.89,
+          1.0,
+          0.1
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0003",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "economy",
+        "entry_id": "economy_session_09_003",
+        "chunk_text": "Economy: The party incited merchants against black tariffs and forced Ser Caldus to publicly choose lawful restraint over Iron Court orders. The bridge wardens fractured into loyalist and reform factions.",
+        "metadata": {
+          "entry_tags": [
+            "session_09",
+            "table_notes",
+            "pending_review"
+          ],
+          "date_created": "2026-03-04T23:00:00Z",
+          "last_updated": "2026-03-05T01:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.51,
+          0.62,
+          0.73,
+          0.84,
+          0.95,
+          0.05,
+          0.16,
+          0.27
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0004",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "politics",
+        "entry_id": "politics_foundation_001",
+        "chunk_text": "Politics: The Iron Court rules through judges, tariff collectors, oath registrars, and noble exemptions. Public trust is weakening as the party exposes fraud and buried history.",
+        "metadata": {
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "iron_court"
+          ],
+          "date_created": "2026-01-04T23:00:00Z",
+          "last_updated": "2026-01-05T23:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.68,
+          0.79,
+          0.9,
+          0.0,
+          0.11,
+          0.22,
+          0.33,
+          0.44
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0005",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "politics",
+        "entry_id": "politics_session_07_002",
+        "chunk_text": "Politics: At a masked Iron Court gathering, the clapper exposed Lady Ilyra Vey as a pact broker. The party learned noble exceptions are purchased through secret vow ledgers.",
+        "metadata": {
+          "entry_tags": [
+            "session_07",
+            "table_notes",
+            "approved_canon"
+          ],
+          "date_created": "2026-02-18T23:00:00Z",
+          "last_updated": "2026-02-19T01:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.85,
+          0.96,
+          0.06,
+          0.17,
+          0.28,
+          0.39,
+          0.5,
+          0.61
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0006",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "magic_systems",
+        "entry_id": "magic_systems_foundation_001",
+        "chunk_text": "Magic Systems: Oath magic is powered by leylines beneath public witness stones. True oaths create silver resonance; false, coerced, or broken oaths create ash-black discord.",
+        "metadata": {
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "oath_magic"
+          ],
+          "date_created": "2026-01-04T19:00:00Z",
+          "last_updated": "2026-01-05T19:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.01,
+          0.12,
+          0.23,
+          0.34,
+          0.45,
+          0.56,
+          0.67,
+          0.78
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0007",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "magic_systems",
+        "entry_id": "magic_systems_session_04_002",
+        "chunk_text": "Magic Systems: Saint Orra’s chapel revealed forbidden records: oath magic changed after the Flood of Bells, binding commoners harder than nobles. Brother Pell became a cautious ally.",
+        "metadata": {
+          "entry_tags": [
+            "session_04",
+            "table_notes",
+            "approved_canon"
+          ],
+          "date_created": "2026-01-28T23:00:00Z",
+          "last_updated": "2026-01-29T01:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.18,
+          0.29,
+          0.4,
+          0.51,
+          0.62,
+          0.73,
+          0.84,
+          0.95
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0008",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "magic_systems",
+        "entry_id": "magic_systems_session_08_003",
+        "chunk_text": "Magic Systems: The group performed a dangerous Leyline Vow to locate the Bell Vault door. Nyra’s voice gained permanent silver resonance, making false oaths painful to hear.",
+        "metadata": {
+          "entry_tags": [
+            "session_08",
+            "table_notes",
+            "approved_canon"
+          ],
+          "date_created": "2026-02-25T23:00:00Z",
+          "last_updated": "2026-02-26T01:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.35,
+          0.46,
+          0.57,
+          0.68,
+          0.79,
+          0.9,
+          0.0,
+          0.11
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0009",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "world_artifacts",
+        "entry_id": "world_artifacts_foundation_001",
+        "chunk_text": "World Artifacts: The Drowned Bell Clapper is a cracked bronze relic from Saint Orra’s tower. It reacts to Talon’s scar and can locate sealed vault doors when rung underwater.",
+        "metadata": {
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "bell_clapper"
+          ],
+          "date_created": "2026-01-04T20:00:00Z",
+          "last_updated": "2026-01-05T20:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.52,
+          0.63,
+          0.74,
+          0.85,
+          0.96,
+          0.06,
+          0.17,
+          0.28
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0010",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "world_artifacts",
+        "entry_id": "world_artifacts_session_06_002",
+        "chunk_text": "World Artifacts: The party entered the drowned bell tower, fought ash-eels, and recovered a cracked bronze bell clapper. Talon’s ash-scar burned when the clapper rang underwater.",
+        "metadata": {
+          "entry_tags": [
+            "session_06",
+            "table_notes",
+            "approved_canon"
+          ],
+          "date_created": "2026-02-11T23:00:00Z",
+          "last_updated": "2026-02-12T01:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.69,
+          0.8,
+          0.91,
+          0.01,
+          0.12,
+          0.23,
+          0.34,
+          0.45
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0011",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "npcs",
+        "entry_id": "npcs_foundation_001",
+        "chunk_text": "NPCs: Ser Caldus Vorn is an honorable bridge captain trapped by debt and duty. Lady Ilyra Vey is an Iron Court patron who brokers illegal pacts. Brother Pell protects forbidden chapel records.",
+        "metadata": {
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "ser_caldus"
+          ],
+          "date_created": "2026-01-04T21:00:00Z",
+          "last_updated": "2026-01-05T21:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.86,
+          0.97,
+          0.07,
+          0.18,
+          0.29,
+          0.4,
+          0.51,
+          0.62
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0012",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "npcs",
+        "entry_id": "npcs_session_03_002",
+        "chunk_text": "NPCs: Mira used a River Oath loophole in court. Nyra heard false testimony as broken music, proving oath magic can reveal coerced lies but not safely in public.",
+        "metadata": {
+          "entry_tags": [
+            "session_03",
+            "table_notes",
+            "approved_canon"
+          ],
+          "date_created": "2026-01-21T23:00:00Z",
+          "last_updated": "2026-01-22T01:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.02,
+          0.13,
+          0.24,
+          0.35,
+          0.46,
+          0.57,
+          0.68,
+          0.79
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0013",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "npcs",
+        "entry_id": "npcs_session_07_003",
+        "chunk_text": "NPCs: At a masked Iron Court gathering, the clapper exposed Lady Ilyra Vey as a pact broker. The party learned noble exceptions are purchased through secret vow ledgers.",
+        "metadata": {
+          "entry_tags": [
+            "session_07",
+            "table_notes",
+            "approved_canon"
+          ],
+          "date_created": "2026-02-18T23:00:00Z",
+          "last_updated": "2026-02-19T01:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.19,
+          0.3,
+          0.41,
+          0.52,
+          0.63,
+          0.74,
+          0.85,
+          0.96
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0014",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "government_organizations",
+        "entry_id": "government_organizations_foundation_001",
+        "chunk_text": "Government Organizations: The Iron Court contains judges, bridge wardens, tariff ministers, and oath registrars. It claims legitimacy from the first Concord after the Flood of Bells.",
+        "metadata": {
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "iron_court"
+          ],
+          "date_created": "2026-01-04T22:00:00Z",
+          "last_updated": "2026-01-05T22:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.36,
+          0.47,
+          0.58,
+          0.69,
+          0.8,
+          0.91,
+          0.01,
+          0.12
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0015",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "government_organizations",
+        "entry_id": "government_organizations_session_09_002",
+        "chunk_text": "Government Organizations: The party incited merchants against black tariffs and forced Ser Caldus to publicly choose lawful restraint over Iron Court orders. The bridge wardens fractured into loyalist and reform factions.",
+        "metadata": {
+          "entry_tags": [
+            "session_09",
+            "table_notes",
+            "pending_review"
+          ],
+          "date_created": "2026-03-04T23:00:00Z",
+          "last_updated": "2026-03-05T01:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.53,
+          0.64,
+          0.75,
+          0.86,
+          0.97,
+          0.07,
+          0.18,
+          0.29
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0016",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "non_government_organizations",
+        "entry_id": "non_government_organizations_foundation_001",
+        "chunk_text": "Non-Government Organizations: The Salt Guild controls storage, barges, and smuggling routes. Saint Orra’s Remnant is an underground chapel network preserving forbidden records and hiding oathbreakers.",
+        "metadata": {
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "salt_guild"
+          ],
+          "date_created": "2026-01-04T23:00:00Z",
+          "last_updated": "2026-01-05T23:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.7,
+          0.81,
+          0.92,
+          0.02,
+          0.13,
+          0.24,
+          0.35,
+          0.46
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0017",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "non_government_organizations",
+        "entry_id": "non_government_organizations_session_02_002",
+        "chunk_text": "Non-Government Organizations: The party stole a Salt Guild ledger proving illegal bridge fees. Bromm identified old clan marks in the margin that reference Bell Vault keys.",
+        "metadata": {
+          "entry_tags": [
+            "session_02",
+            "table_notes",
+            "approved_canon"
+          ],
+          "date_created": "2026-01-14T23:00:00Z",
+          "last_updated": "2026-01-15T01:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.87,
+          0.98,
+          0.08,
+          0.19,
+          0.3,
+          0.41,
+          0.52,
+          0.63
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0018",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "non_government_organizations",
+        "entry_id": "non_government_organizations_session_04_003",
+        "chunk_text": "Non-Government Organizations: Saint Orra’s chapel revealed forbidden records: oath magic changed after the Flood of Bells, binding commoners harder than nobles. Brother Pell became a cautious ally.",
+        "metadata": {
+          "entry_tags": [
+            "session_04",
+            "table_notes",
+            "approved_canon"
+          ],
+          "date_created": "2026-01-28T23:00:00Z",
+          "last_updated": "2026-01-29T01:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.03,
+          0.14,
+          0.25,
+          0.36,
+          0.47,
+          0.58,
+          0.69,
+          0.8
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0019",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "laws",
+        "entry_id": "laws_foundation_001",
+        "chunk_text": "Laws: The River Oath makes spoken contracts legally binding before witness stones. Nobles can buy sealed exceptions, while commoners face asset seizure, ash-branding, or imprisonment.",
+        "metadata": {
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "river_oath"
+          ],
+          "date_created": "2026-01-04T19:00:00Z",
+          "last_updated": "2026-01-05T19:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.2,
+          0.31,
+          0.42,
+          0.53,
+          0.64,
+          0.75,
+          0.86,
+          0.97
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0020",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "laws",
+        "entry_id": "laws_session_03_002",
+        "chunk_text": "Laws: Mira used a River Oath loophole in court. Nyra heard false testimony as broken music, proving oath magic can reveal coerced lies but not safely in public.",
+        "metadata": {
+          "entry_tags": [
+            "session_03",
+            "table_notes",
+            "approved_canon"
+          ],
+          "date_created": "2026-01-21T23:00:00Z",
+          "last_updated": "2026-01-22T01:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.37,
+          0.48,
+          0.59,
+          0.7,
+          0.81,
+          0.92,
+          0.02,
+          0.13
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0021",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "inhabitants",
+        "entry_id": "inhabitants_foundation_001",
+        "chunk_text": "Inhabitants: Kestrel Vale inhabitants include reed farmers, salt workers, barge crews, chapel scribes, displaced hill clans, and bridge wardens. River bells regulate curfew, flood warnings, and market openings.",
+        "metadata": {
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "farmers"
+          ],
+          "date_created": "2026-01-04T20:00:00Z",
+          "last_updated": "2026-01-05T20:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.54,
+          0.65,
+          0.76,
+          0.87,
+          0.98,
+          0.08,
+          0.19,
+          0.3
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0022",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "ecosystems",
+        "entry_id": "ecosystems_foundation_001",
+        "chunk_text": "Ecosystems: The drowned lowlands contain ash-eels, reed wolves, mirror herons, and oath-stone fungal blooms. Floodwater carries ash after storms even when no fire is nearby.",
+        "metadata": {
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "ash_eels"
+          ],
+          "date_created": "2026-01-04T21:00:00Z",
+          "last_updated": "2026-01-05T21:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.71,
+          0.82,
+          0.93,
+          0.03,
+          0.14,
+          0.25,
+          0.36,
+          0.47
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0023",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "ecosystems",
+        "entry_id": "ecosystems_session_06_002",
+        "chunk_text": "Ecosystems: The party entered the drowned bell tower, fought ash-eels, and recovered a cracked bronze bell clapper. Talon’s ash-scar burned when the clapper rang underwater.",
+        "metadata": {
+          "entry_tags": [
+            "session_06",
+            "table_notes",
+            "approved_canon"
+          ],
+          "date_created": "2026-02-11T23:00:00Z",
+          "last_updated": "2026-02-12T01:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.88,
+          0.99,
+          0.09,
+          0.2,
+          0.31,
+          0.42,
+          0.53,
+          0.64
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0024",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "cataclysmic_events",
+        "entry_id": "cataclysmic_events_foundation_001",
+        "chunk_text": "Cataclysmic Events: The Flood of Bells drowned the old capital 91 years ago. Official doctrine calls it divine punishment, but hidden records suggest the first Concord engineered it.",
+        "metadata": {
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "flood_of_bells"
+          ],
+          "date_created": "2026-01-04T22:00:00Z",
+          "last_updated": "2026-01-05T22:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.04,
+          0.15,
+          0.26,
+          0.37,
+          0.48,
+          0.59,
+          0.7,
+          0.81
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0025",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "cataclysmic_events",
+        "entry_id": "cataclysmic_events_session_10_002",
+        "chunk_text": "Cataclysmic Events: The Bell Vault opened with Bromm’s clan key. Records inside showed the first Concord engineered the cataclysm to seize power and then rewrote law, history, and oath magic.",
+        "metadata": {
+          "entry_tags": [
+            "session_10",
+            "table_notes",
+            "pending_review"
+          ],
+          "date_created": "2026-03-11T23:00:00Z",
+          "last_updated": "2026-03-12T01:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.21,
+          0.32,
+          0.43,
+          0.54,
+          0.65,
+          0.76,
+          0.87,
+          0.98
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0026",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "general_overview",
+        "entry_id": "general_overview_foundation_001",
+        "chunk_text": "General Overview: Ashes of Kestrel Vale is a political fantasy campaign about law, memory, class pressure, and commoners reclaiming truth from institutions that weaponize oaths.",
+        "metadata": {
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "campaign_premise"
+          ],
+          "date_created": "2026-01-04T23:00:00Z",
+          "last_updated": "2026-01-05T23:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.38,
+          0.49,
+          0.6,
+          0.71,
+          0.82,
+          0.93,
+          0.03,
+          0.14
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0027",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "general_overview",
+        "entry_id": "general_overview_session_01_002",
+        "chunk_text": "General Overview: The party arrived at Kestrel Gate during unnatural ash rain. They learned bridge tariffs are crushing commoners and that the drowned bell is treated as both religious warning and political taboo.",
+        "metadata": {
+          "entry_tags": [
+            "session_01",
+            "table_notes",
+            "approved_canon"
+          ],
+          "date_created": "2026-01-07T23:00:00Z",
+          "last_updated": "2026-01-08T01:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.55,
+          0.66,
+          0.77,
+          0.88,
+          0.99,
+          0.09,
+          0.2,
+          0.31
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0028",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "races",
+        "entry_id": "races_foundation_001",
+        "chunk_text": "Races: Humans dominate river towns. Dwarven hill clans hold old vault craft. Half-elves preserve chapel scholarship. Tieflings are stigmatized as oath-discord carriers.",
+        "metadata": {
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "humans"
+          ],
+          "date_created": "2026-01-04T19:00:00Z",
+          "last_updated": "2026-01-05T19:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.72,
+          0.83,
+          0.94,
+          0.04,
+          0.15,
+          0.26,
+          0.37,
+          0.48
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0029",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "jobs_and_roles",
+        "entry_id": "jobs_and_roles_foundation_001",
+        "chunk_text": "Jobs and Roles: Important roles include bridge wardens, oath registrars, salt factors, bell divers, flood tunnel guides, chapel archivists, reed farmers, and clan keywrights.",
+        "metadata": {
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "bridge_wardens"
+          ],
+          "date_created": "2026-01-04T20:00:00Z",
+          "last_updated": "2026-01-05T20:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.89,
+          1.0,
+          0.1,
+          0.21,
+          0.32,
+          0.43,
+          0.54,
+          0.65
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0030",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "technology_systems",
+        "entry_id": "technology_systems_foundation_001",
+        "chunk_text": "Technology Systems: Technology includes river locks, mechanical bell pumps, waterlogged vault doors, alchemical lanterns, salt-preservation engines, and oath stones.",
+        "metadata": {
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "river_locks"
+          ],
+          "date_created": "2026-01-04T21:00:00Z",
+          "last_updated": "2026-01-05T21:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.05,
+          0.16,
+          0.27,
+          0.38,
+          0.49,
+          0.6,
+          0.71,
+          0.82
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0031",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "technology_systems",
+        "entry_id": "technology_systems_session_05_002",
+        "chunk_text": "Technology Systems: A smuggler map exposed flood tunnels under the old bell tower and a hidden Iron Court supply route. Ser Caldus warned the party to stop before his superiors noticed.",
+        "metadata": {
+          "entry_tags": [
+            "session_05",
+            "table_notes",
+            "approved_canon"
+          ],
+          "date_created": "2026-02-04T23:00:00Z",
+          "last_updated": "2026-02-05T01:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.22,
+          0.33,
+          0.44,
+          0.55,
+          0.66,
+          0.77,
+          0.88,
+          0.99
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0032",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "regions",
+        "entry_id": "regions_foundation_001",
+        "chunk_text": "Regions: Key places include Kestrel Gate, Black Tariff Bridge, Saint Orra’s Chapel, the drowned lowlands, the Old Bell Tower, and the hidden Bell Vault.",
+        "metadata": {
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "kestrel_gate"
+          ],
+          "date_created": "2026-01-04T22:00:00Z",
+          "last_updated": "2026-01-05T22:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.39,
+          0.5,
+          0.61,
+          0.72,
+          0.83,
+          0.94,
+          0.04,
+          0.15
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0033",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "regions",
+        "entry_id": "regions_session_01_002",
+        "chunk_text": "Regions: The party arrived at Kestrel Gate during unnatural ash rain. They learned bridge tariffs are crushing commoners and that the drowned bell is treated as both religious warning and political taboo.",
+        "metadata": {
+          "entry_tags": [
+            "session_01",
+            "table_notes",
+            "approved_canon"
+          ],
+          "date_created": "2026-01-07T23:00:00Z",
+          "last_updated": "2026-01-08T01:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.56,
+          0.67,
+          0.78,
+          0.89,
+          1.0,
+          0.1,
+          0.21,
+          0.32
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0034",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "regions",
+        "entry_id": "regions_session_05_003",
+        "chunk_text": "Regions: A smuggler map exposed flood tunnels under the old bell tower and a hidden Iron Court supply route. Ser Caldus warned the party to stop before his superiors noticed.",
+        "metadata": {
+          "entry_tags": [
+            "session_05",
+            "table_notes",
+            "approved_canon"
+          ],
+          "date_created": "2026-02-04T23:00:00Z",
+          "last_updated": "2026-02-05T01:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.73,
+          0.84,
+          0.95,
+          0.05,
+          0.16,
+          0.27,
+          0.38,
+          0.49
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0035",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "era",
+        "entry_id": "era_foundation_001",
+        "chunk_text": "Era: The campaign is set in Year 91 After the Flood during the late Concord Era, when official history is beginning to fracture.",
+        "metadata": {
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "year_91_after_flood"
+          ],
+          "date_created": "2026-01-04T23:00:00Z",
+          "last_updated": "2026-01-05T23:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.9,
+          0.0,
+          0.11,
+          0.22,
+          0.33,
+          0.44,
+          0.55,
+          0.66
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0036",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "era",
+        "entry_id": "era_session_10_002",
+        "chunk_text": "Era: The Bell Vault opened with Bromm’s clan key. Records inside showed the first Concord engineered the cataclysm to seize power and then rewrote law, history, and oath magic.",
+        "metadata": {
+          "entry_tags": [
+            "session_10",
+            "table_notes",
+            "pending_review"
+          ],
+          "date_created": "2026-03-11T23:00:00Z",
+          "last_updated": "2026-03-12T01:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.06,
+          0.17,
+          0.28,
+          0.39,
+          0.5,
+          0.61,
+          0.72,
+          0.83
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0037",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "player_characters",
+        "entry_id": "player_characters_foundation_001",
+        "chunk_text": "Player Characters: Talon carries an ash-scar pact. Mira seeks erased records. Bromm has clan keywright heritage. Nyra hears oath lies as musical dissonance.",
+        "metadata": {
+          "entry_tags": [
+            "foundation",
+            "approved_canon",
+            "talon"
+          ],
+          "date_created": "2026-01-04T19:00:00Z",
+          "last_updated": "2026-01-05T19:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.23,
+          0.34,
+          0.45,
+          0.56,
+          0.67,
+          0.78,
+          0.89,
+          1.0
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0038",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "player_characters",
+        "entry_id": "player_characters_session_01_002",
+        "chunk_text": "Player Characters: The party arrived at Kestrel Gate during unnatural ash rain. They learned bridge tariffs are crushing commoners and that the drowned bell is treated as both religious warning and political taboo.",
+        "metadata": {
+          "entry_tags": [
+            "session_01",
+            "table_notes",
+            "approved_canon"
+          ],
+          "date_created": "2026-01-07T23:00:00Z",
+          "last_updated": "2026-01-08T01:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.4,
+          0.51,
+          0.62,
+          0.73,
+          0.84,
+          0.95,
+          0.05,
+          0.16
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0039",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "player_characters",
+        "entry_id": "player_characters_session_02_003",
+        "chunk_text": "Player Characters: The party stole a Salt Guild ledger proving illegal bridge fees. Bromm identified old clan marks in the margin that reference Bell Vault keys.",
+        "metadata": {
+          "entry_tags": [
+            "session_02",
+            "table_notes",
+            "approved_canon"
+          ],
+          "date_created": "2026-01-14T23:00:00Z",
+          "last_updated": "2026-01-15T01:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.57,
+          0.68,
+          0.79,
+          0.9,
+          0.0,
+          0.11,
+          0.22,
+          0.33
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0040",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "player_characters",
+        "entry_id": "player_characters_session_03_004",
+        "chunk_text": "Player Characters: Mira used a River Oath loophole in court. Nyra heard false testimony as broken music, proving oath magic can reveal coerced lies but not safely in public.",
+        "metadata": {
+          "entry_tags": [
+            "session_03",
+            "table_notes",
+            "approved_canon"
+          ],
+          "date_created": "2026-01-21T23:00:00Z",
+          "last_updated": "2026-01-22T01:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.74,
+          0.85,
+          0.96,
+          0.06,
+          0.17,
+          0.28,
+          0.39,
+          0.5
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0041",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "player_characters",
+        "entry_id": "player_characters_session_04_005",
+        "chunk_text": "Player Characters: Saint Orra’s chapel revealed forbidden records: oath magic changed after the Flood of Bells, binding commoners harder than nobles. Brother Pell became a cautious ally.",
+        "metadata": {
+          "entry_tags": [
+            "session_04",
+            "table_notes",
+            "approved_canon"
+          ],
+          "date_created": "2026-01-28T23:00:00Z",
+          "last_updated": "2026-01-29T01:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.91,
+          0.01,
+          0.12,
+          0.23,
+          0.34,
+          0.45,
+          0.56,
+          0.67
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0042",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "player_characters",
+        "entry_id": "player_characters_session_05_006",
+        "chunk_text": "Player Characters: A smuggler map exposed flood tunnels under the old bell tower and a hidden Iron Court supply route. Ser Caldus warned the party to stop before his superiors noticed.",
+        "metadata": {
+          "entry_tags": [
+            "session_05",
+            "table_notes",
+            "approved_canon"
+          ],
+          "date_created": "2026-02-04T23:00:00Z",
+          "last_updated": "2026-02-05T01:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.07,
+          0.18,
+          0.29,
+          0.4,
+          0.51,
+          0.62,
+          0.73,
+          0.84
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0043",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "player_characters",
+        "entry_id": "player_characters_session_06_007",
+        "chunk_text": "Player Characters: The party entered the drowned bell tower, fought ash-eels, and recovered a cracked bronze bell clapper. Talon’s ash-scar burned when the clapper rang underwater.",
+        "metadata": {
+          "entry_tags": [
+            "session_06",
+            "table_notes",
+            "approved_canon"
+          ],
+          "date_created": "2026-02-11T23:00:00Z",
+          "last_updated": "2026-02-12T01:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.24,
+          0.35,
+          0.46,
+          0.57,
+          0.68,
+          0.79,
+          0.9,
+          0.0
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0044",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "player_characters",
+        "entry_id": "player_characters_session_07_008",
+        "chunk_text": "Player Characters: At a masked Iron Court gathering, the clapper exposed Lady Ilyra Vey as a pact broker. The party learned noble exceptions are purchased through secret vow ledgers.",
+        "metadata": {
+          "entry_tags": [
+            "session_07",
+            "table_notes",
+            "approved_canon"
+          ],
+          "date_created": "2026-02-18T23:00:00Z",
+          "last_updated": "2026-02-19T01:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.41,
+          0.52,
+          0.63,
+          0.74,
+          0.85,
+          0.96,
+          0.06,
+          0.17
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0045",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "player_characters",
+        "entry_id": "player_characters_session_08_009",
+        "chunk_text": "Player Characters: The group performed a dangerous Leyline Vow to locate the Bell Vault door. Nyra’s voice gained permanent silver resonance, making false oaths painful to hear.",
+        "metadata": {
+          "entry_tags": [
+            "session_08",
+            "table_notes",
+            "approved_canon"
+          ],
+          "date_created": "2026-02-25T23:00:00Z",
+          "last_updated": "2026-02-26T01:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.58,
+          0.69,
+          0.8,
+          0.91,
+          0.01,
+          0.12,
+          0.23,
+          0.34
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0046",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "player_characters",
+        "entry_id": "player_characters_session_08_010",
+        "chunk_text": "Player Characters: The group performed a dangerous Leyline Vow to locate the Bell Vault door. Nyra’s voice gained permanent silver resonance, making false oaths painful to hear.",
+        "metadata": {
+          "entry_tags": [
+            "session_08",
+            "table_notes",
+            "approved_canon"
+          ],
+          "date_created": "2026-02-25T23:00:00Z",
+          "last_updated": "2026-02-26T01:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.75,
+          0.86,
+          0.97,
+          0.07,
+          0.18,
+          0.29,
+          0.4,
+          0.51
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0047",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "player_characters",
+        "entry_id": "player_characters_session_09_011",
+        "chunk_text": "Player Characters: The party incited merchants against black tariffs and forced Ser Caldus to publicly choose lawful restraint over Iron Court orders. The bridge wardens fractured into loyalist and reform factions.",
+        "metadata": {
+          "entry_tags": [
+            "session_09",
+            "table_notes",
+            "pending_review"
+          ],
+          "date_created": "2026-03-04T23:00:00Z",
+          "last_updated": "2026-03-05T01:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.92,
+          0.02,
+          0.13,
+          0.24,
+          0.35,
+          0.46,
+          0.57,
+          0.68
+        ]
+      },
+      {
+        "rag_chunk_id": "rag_chunk_0048",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "category": "player_characters",
+        "entry_id": "player_characters_session_10_012",
+        "chunk_text": "Player Characters: The Bell Vault opened with Bromm’s clan key. Records inside showed the first Concord engineered the cataclysm to seize power and then rewrote law, history, and oath magic.",
+        "metadata": {
+          "entry_tags": [
+            "session_10",
+            "table_notes",
+            "pending_review"
+          ],
+          "date_created": "2026-03-11T23:00:00Z",
+          "last_updated": "2026-03-12T01:00:00Z"
+        },
+        "embedding_placeholder": [
+          0.08,
+          0.19,
+          0.3,
+          0.41,
+          0.52,
+          0.63,
+          0.74,
+          0.85
+        ]
+      }
+    ],
+    "ai_jobs": [
+      {
+        "job_id": "ai_extract_session_01",
+        "job_type": "summarize_and_tag_session_entries",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "session_id": "session_01",
+        "status": "completed",
+        "created_at": "2026-01-08T00:00:00Z",
+        "completed_at": "2026-01-08T01:00:00Z"
+      },
+      {
+        "job_id": "ai_extract_session_02",
+        "job_type": "summarize_and_tag_session_entries",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "session_id": "session_02",
+        "status": "completed",
+        "created_at": "2026-01-15T00:00:00Z",
+        "completed_at": "2026-01-15T01:00:00Z"
+      },
+      {
+        "job_id": "ai_extract_session_03",
+        "job_type": "summarize_and_tag_session_entries",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "session_id": "session_03",
+        "status": "completed",
+        "created_at": "2026-01-22T00:00:00Z",
+        "completed_at": "2026-01-22T01:00:00Z"
+      },
+      {
+        "job_id": "ai_extract_session_04",
+        "job_type": "summarize_and_tag_session_entries",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "session_id": "session_04",
+        "status": "completed",
+        "created_at": "2026-01-29T00:00:00Z",
+        "completed_at": "2026-01-29T01:00:00Z"
+      },
+      {
+        "job_id": "ai_extract_session_05",
+        "job_type": "summarize_and_tag_session_entries",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "session_id": "session_05",
+        "status": "completed",
+        "created_at": "2026-02-05T00:00:00Z",
+        "completed_at": "2026-02-05T01:00:00Z"
+      },
+      {
+        "job_id": "ai_extract_session_06",
+        "job_type": "summarize_and_tag_session_entries",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "session_id": "session_06",
+        "status": "completed",
+        "created_at": "2026-02-12T00:00:00Z",
+        "completed_at": "2026-02-12T01:00:00Z"
+      },
+      {
+        "job_id": "ai_extract_session_07",
+        "job_type": "summarize_and_tag_session_entries",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "session_id": "session_07",
+        "status": "completed",
+        "created_at": "2026-02-19T00:00:00Z",
+        "completed_at": "2026-02-19T01:00:00Z"
+      },
+      {
+        "job_id": "ai_extract_session_08",
+        "job_type": "summarize_and_tag_session_entries",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "session_id": "session_08",
+        "status": "completed",
+        "created_at": "2026-02-26T00:00:00Z",
+        "completed_at": "2026-02-26T01:00:00Z"
+      },
+      {
+        "job_id": "ai_extract_session_09",
+        "job_type": "summarize_and_tag_session_entries",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "session_id": "session_09",
+        "status": "needs_gm_review",
+        "created_at": "2026-03-05T00:00:00Z",
+        "completed_at": null
+      },
+      {
+        "job_id": "ai_extract_session_10",
+        "job_type": "summarize_and_tag_session_entries",
+        "world_id": "world_ashes_of_kestrel_vale",
+        "session_id": "session_10",
+        "status": "needs_gm_review",
+        "created_at": "2026-03-12T00:00:00Z",
+        "completed_at": null
+      }
+    ]
+  }
+}

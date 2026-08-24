@@ -786,9 +786,23 @@ function ProviderOnboardingModal({ onClose, onConfigure }: { onClose: () => void
             <h3>Connect OpenAI for this session</h3>
             <ol>
               <li><a href="https://platform.openai.com/api-keys" rel="noreferrer" target="_blank">Create an OpenAI API key</a> in your OpenAI project.</li>
-              <li>Set your own project budget and usage limits before using the key here.</li>
+              <li>Set a project budget and usage limits before using the key here.</li>
               <li>Paste the key below. It is sent to Session Smith only when an AI job runs.</li>
             </ol>
+            <aside className="provider-budget-note">
+              <strong>Suggested starting limit: $5/month</strong>
+              <p>Create a dedicated OpenAI project, set a hard monthly spend limit and an alert, then increase it only after you understand your campaign’s usage.</p>
+            </aside>
+            <details className="provider-key-guide">
+              <summary>Need help getting your API key?</summary>
+              <ol>
+                <li>Open the OpenAI API platform and sign in or create an account.</li>
+                <li>Create a dedicated project for Session Smith, then add billing or credits to that project.</li>
+                <li>Set the $5 monthly spending limit and alert for the project.</li>
+                <li>On the API keys page, create a new secret key, copy it once, and paste it below. Do not share it with anyone else.</li>
+              </ol>
+              <a href="https://platform.openai.com/api-keys" rel="noreferrer" target="_blank">Open the OpenAI API keys page →</a>
+            </details>
             <label>
               OpenAI API key
               <input autoComplete="off" onChange={(event) => setApiKey(event.target.value)} placeholder="Paste your key" spellCheck="false" type="password" value={apiKey} />

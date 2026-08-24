@@ -147,6 +147,14 @@ label { display: block; color: #d7caba; font-size: 0.92rem; margin: 1rem 0; }
 .provider-acknowledgement { display: flex; align-items: flex-start; gap: 0.65rem; color: #cdd7e8; }
 .provider-acknowledgement input { width: auto; margin: 0.2rem 0 0; }
 .provider-security-note { border-left: 3px solid rgba(246,180,75,0.7); padding-left: 0.8rem; color: #cdd7e8 !important; }
+.provider-budget-note { display: grid; gap: 0.35rem; border: 1px solid rgba(111,151,255,0.35); border-radius: 12px; padding: 0.75rem 0.85rem; background: rgba(111,151,255,0.08); }
+.provider-budget-note strong { color: #dbe6ff; }
+.provider-budget-note p { margin: 0; }
+.provider-budget-note a { width: fit-content; font-weight: 800; }
+.provider-key-guide { border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 0.7rem 0.85rem; color: #cdd7e8; }
+.provider-key-guide summary { cursor: pointer; color: #f6efe7; font-weight: 800; }
+.provider-key-guide ol { margin: 0.7rem 0; padding-left: 1.3rem; }
+.provider-key-guide a { font-weight: 800; }
 
 .app-shell { display: grid; grid-template-columns: 330px 1fr; min-height: 100vh; }
 .sidebar { border-right: 1px solid rgba(255,255,255,0.08); background: rgba(8, 12, 20, 0.86); backdrop-filter: blur(18px); padding: 2rem; position: sticky; top: 0; height: 100vh; overflow-y: auto; }

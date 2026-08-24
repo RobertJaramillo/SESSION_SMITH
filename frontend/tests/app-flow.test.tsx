@@ -37,6 +37,9 @@ describe('app entry flow', () => {
     fireEvent.click(screen.getByRole('button', { name: /use my openai api key/i }));
     const connect = screen.getByRole('button', { name: /use openai this session/i });
     expect(connect.hasAttribute('disabled')).toBe(true);
+    expect(screen.getByText(/suggested starting limit: \$5\/month/i)).toBeTruthy();
+    expect(screen.getByText(/need help getting your api key/i)).toBeTruthy();
+    expect(screen.getByRole('link', { name: /open the openai api keys page/i }).getAttribute('href')).toBe('https://platform.openai.com/api-keys');
 
     fireEvent.change(screen.getByPlaceholderText(/paste your key/i), { target: { value: 'sk-test-key' } });
     fireEvent.click(screen.getByRole('checkbox', { name: /used only for this browser session/i }));

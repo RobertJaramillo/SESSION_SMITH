@@ -16,9 +16,15 @@ generation and where campaign notes are sent.
 
 1. Sign in to the [OpenAI API platform](https://platform.openai.com/).
 2. Create a project API key from the [API keys page](https://platform.openai.com/api-keys).
-3. Review that project's budget and usage limits before using the key.
+3. Start with a **$5/month** hard project spend limit and a spend alert. Increase
+   it only after reviewing actual usage; this is a safe starting point, not a
+   promise of a fixed number of generations.
 4. In Session Smith, choose **Use my OpenAI API key**, paste the key, acknowledge
    the session-only policy, and select **Use OpenAI this session**.
+
+The OpenAI setup screen includes this same short walkthrough and a direct link to
+the [API keys page](https://platform.openai.com/api-keys), so users do not need
+to leave the app to understand the steps.
 
 The key is never placed in the URL, browser storage, Session Smith's database,
 or AI job history. It is held in the running browser tab and sent only to the

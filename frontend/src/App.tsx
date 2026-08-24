@@ -22,6 +22,8 @@ import {
   pollJob,
   reviewProposal as apiReviewProposal,
   sealWorld,
+  clearSessionAIProvider,
+  setSessionOpenAIKey,
   submitBuildWorld,
   submitPrepJob,
   submitSessionNotes,
@@ -32,23 +34,39 @@ import type { ApiCanonEvent, ApiEntry, ApiProposal, ApiWorkspaceSummary, ReviewA
 
 type PrepState = { goal: string; tone: string; memories: string; outline: string };
 type NoteSubmission = { note: string; sessionNumber: string; title: string };
+type AIProvider = 'demo' | 'openai';
 
 const WORKSPACE_PAGES = campaignWorkspaceNavItems.map((item) => item.page) as string[];
 
 export default function App() {
   const startsOnDashboard = new URLSearchParams(window.location.search).get('preview') === 'dashboard';
   const [isAuthenticated, setIsAuthenticated] = useState(startsOnDashboard);
+  const [providerSetupOpen, setProviderSetupOpen] = useState(false);
+  const [provider, setProvider] = useState<AIProvider>('demo');
+
+  const configureProvider = (nextProvider: AIProvider, apiKey = '') => {
+    if (nextProvider === 'openai') setSessionOpenAIKey(apiKey);
+    else clearSessionAIProvider();
+    setProvider(nextProvider);
+    setProviderSetupOpen(false);
+  };
+
+  const signOut = () => {
+    clearSessionAIProvider();
+    setProvider('demo');
+    setIsAuthenticated(false);
+  };
 
   return (
     <BrowserRouter>
       <Routes>
         <Route
           path="/login"
-          element={isAuthenticated ? <Navigate replace to="/campaigns" /> : <LoginPage onSignIn={() => setIsAuthenticated(true)} />}
+          element={isAuthenticated ? <Navigate replace to="/campaigns" /> : <LoginPage onSignIn={() => { setIsAuthenticated(true); setProviderSetupOpen(true); }} />}
         />
         <Route
           path="/campaigns"
-          element={isAuthenticated ? <DashboardRoute onLogout={() => setIsAuthenticated(false)} /> : <Navigate replace to="/login" />}
+          element={isAuthenticated ? <DashboardRoute onLogout={signOut} provider={provider} onManageProvider={() => setProviderSetupOpen(true)} /> : <Navigate replace to="/login" />}
         />
         <Route
           path="/campaigns/:campaignId/*"
@@ -56,16 +74,19 @@ export default function App() {
         />
         <Route path="*" element={<Navigate replace to={isAuthenticated ? '/campaigns' : '/login'} />} />
       </Routes>
+      {providerSetupOpen && <ProviderOnboardingModal onClose={() => setProviderSetupOpen(false)} onConfigure={configureProvider} />}
     </BrowserRouter>
   );
 }
 
-function DashboardRoute({ onLogout }: { onLogout: () => void }) {
+function DashboardRoute({ onLogout, provider, onManageProvider }: { onLogout: () => void; provider: AIProvider; onManageProvider: () => void }) {
   const navigate = useNavigate();
   return (
     <CampaignDashboardPage
       onOpenCampaign={(campaign) => navigate(`/campaigns/${campaign.campaignId}`)}
       onLogout={() => { onLogout(); navigate('/login'); }}
+      provider={provider}
+      onManageProvider={onManageProvider}
     />
   );
 }
@@ -382,7 +403,7 @@ function LoginPage({ onSignIn }: { onSignIn: () => void }) {
   );
 }
 
-function CampaignDashboardPage({ onOpenCampaign, onLogout }: { onOpenCampaign: (campaign: CampaignSummary) => void; onLogout: () => void }) {
+function CampaignDashboardPage({ onOpenCampaign, onLogout, provider, onManageProvider }: { onOpenCampaign: (campaign: CampaignSummary) => void; onLogout: () => void; provider: AIProvider; onManageProvider: () => void }) {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -519,6 +540,8 @@ function CampaignDashboardPage({ onOpenCampaign, onLogout }: { onOpenCampaign: (
           accountName={accountName}
           accountTier={accountTier}
           onClose={() => setSettingsOpen(false)}
+          provider={provider}
+          onManageProvider={() => { setSettingsOpen(false); onManageProvider(); }}
         />
       )}
 
@@ -598,11 +621,15 @@ function SettingsModal({
   accountName,
   accountTier,
   onClose,
+  provider,
+  onManageProvider,
 }: {
   accountEmail: string;
   accountName: string;
   accountTier: string;
   onClose: () => void;
+  provider: AIProvider;
+  onManageProvider: () => void;
 }) {
   const [settingValues, setSettingValues] = useState<Record<EditableSettingId, string>>({
     name: accountName,
@@ -662,6 +689,16 @@ function SettingsModal({
         </div>
 
         <div className="settings-option-list">
+          <article className="settings-option">
+            <div>
+              <span>AI provider</span>
+              <strong>{provider === 'openai' ? 'OpenAI — this browser session' : 'No provider connected'}</strong>
+              <p>{provider === 'openai' ? 'Your key is held only in memory and is cleared when you log out or refresh.' : 'Connect an AI provider to use live generation.'}</p>
+            </div>
+            <div className="settings-option-actions" aria-label="AI provider actions">
+              <button onClick={onManageProvider} type="button">Manage</button>
+            </div>
+          </article>
           {settingsRows.map((row) => (
             <article className="settings-option" key={row.id}>
               <div>
@@ -690,6 +727,108 @@ function SettingsModal({
           onSave={(value) => saveSetting(editingSetting.id as EditableSettingId, value)}
         />
       )}
+    </div>
+  );
+}
+
+function ProviderOnboardingModal({ onClose, onConfigure }: { onClose: () => void; onConfigure: (provider: AIProvider, apiKey?: string) => void }) {
+  const [choice, setChoice] = useState<'start' | 'openai' | 'gemini' | 'hosted'>('start');
+  const [apiKey, setApiKey] = useState('');
+  const [acknowledged, setAcknowledged] = useState(false);
+  const isOpenAI = choice === 'openai';
+
+  return (
+    <div className="modal-backdrop" role="presentation">
+      <section aria-labelledby="provider-onboarding-title" aria-modal="true" className="settings-modal provider-onboarding-modal" role="dialog">
+        <div className="settings-modal-header">
+          <div>
+            <span className="eyebrow">AI setup</span>
+            <h2 id="provider-onboarding-title">Choose how to power your campaign</h2>
+          </div>
+          <button aria-label="Close AI setup" className="modal-close-button" onClick={onClose} type="button">×</button>
+        </div>
+
+        {choice === 'start' && (
+          <div className="provider-choice-list">
+            <section className="provider-choice-section" aria-labelledby="available-provider-options">
+              <div className="provider-section-header">
+                <span id="available-provider-options">Available now</span>
+                <p>Connect a key you already own to use live AI generation.</p>
+              </div>
+              <button className="provider-choice provider-choice-openai provider-choice-primary" onClick={() => setChoice('openai')} type="button">
+                <span>Available now</span>
+                <strong>Use my OpenAI API key</strong>
+                <p>Live generation, billed by OpenAI. Your key stays in this browser session.</p>
+              </button>
+            </section>
+
+            <section className="provider-choice-section provider-choice-section-secondary" aria-labelledby="future-provider-options">
+              <div className="provider-section-header">
+                <span id="future-provider-options">Coming next</span>
+              </div>
+              <button className="provider-choice provider-choice-compact" onClick={() => setChoice('gemini')} type="button">
+                <span>Gemini free tier</span>
+                <strong>Read the setup guide</strong>
+                <p>Prepare a Gemini key now; Session Smith support is coming next.</p>
+              </button>
+              <button className="provider-choice provider-choice-hosted" onClick={() => setChoice('hosted')} type="button">
+                <span className="provider-choice-status">Coming soon</span>
+                <strong>Session Smith Hosted AI · $5/month</strong>
+                <p>Not purchasable yet. We’ll launch it with clear included usage, billing, and account controls.</p>
+              </button>
+            </section>
+          </div>
+        )}
+
+        {isOpenAI && (
+          <div className="setting-update-body provider-detail">
+            <button className="link-button back-button" onClick={() => setChoice('start')} type="button">← All options</button>
+            <h3>Connect OpenAI for this session</h3>
+            <ol>
+              <li><a href="https://platform.openai.com/api-keys" rel="noreferrer" target="_blank">Create an OpenAI API key</a> in your OpenAI project.</li>
+              <li>Set your own project budget and usage limits before using the key here.</li>
+              <li>Paste the key below. It is sent to Session Smith only when an AI job runs.</li>
+            </ol>
+            <label>
+              OpenAI API key
+              <input autoComplete="off" onChange={(event) => setApiKey(event.target.value)} placeholder="Paste your key" spellCheck="false" type="password" value={apiKey} />
+            </label>
+            <label className="checkbox-label provider-acknowledgement">
+              <input checked={acknowledged} onChange={(event) => setAcknowledged(event.target.checked)} type="checkbox" />
+              <span>I understand this key is used only for this browser session and will be cleared on refresh or log out.</span>
+            </label>
+            <p className="provider-security-note">Session Smith does not save this key to browser storage, its database, URLs, or job history. Use this beta flow only over HTTPS in production.</p>
+            <div className="settings-confirm-actions">
+              <button className="secondary" onClick={onClose} type="button">Not now</button>
+              <button disabled={!acknowledged || apiKey.trim().length < 8} onClick={() => onConfigure('openai', apiKey)} type="button">Use OpenAI this session</button>
+            </div>
+          </div>
+        )}
+
+        {choice === 'gemini' && (
+          <div className="setting-update-body provider-detail">
+            <button className="link-button back-button" onClick={() => setChoice('start')} type="button">← All options</button>
+            <h3>Try Gemini without committing to a paid plan</h3>
+            <ol>
+              <li><a href="https://aistudio.google.com/app/apikey" rel="noreferrer" target="_blank">Create a Gemini API key in Google AI Studio</a>.</li>
+              <li>Choose a model with a free-tier allowance and check its current rate limits before using it.</li>
+              <li>Do not paste a Gemini key into Session Smith yet—the Gemini adapter has not been implemented.</li>
+            </ol>
+            <p className="provider-security-note">Google's eligible-new-customer Cloud trial is separate: it currently offers $300 in credits for 90 days. The Gemini Developer API also has free-tier options with limits and distinct data-use terms.</p>
+            <div className="settings-confirm-actions"><button onClick={onClose} type="button">Close setup</button></div>
+          </div>
+        )}
+
+        {choice === 'hosted' && (
+          <div className="setting-update-body provider-detail">
+            <button className="link-button back-button" onClick={() => setChoice('start')} type="button">← All options</button>
+            <h3>Hosted AI is not available yet</h3>
+            <p>A $5/month plan can work as a convenience subscription, but it should not promise unlimited AI. Before launch, it needs real accounts, encrypted provider credentials, payment handling, and a clear monthly request or token allowance.</p>
+            <p className="provider-security-note">For the beta, connect your own OpenAI key. Your provider bill stays with your provider.</p>
+            <div className="settings-confirm-actions"><button onClick={onClose} type="button">Close setup</button></div>
+          </div>
+        )}
+      </section>
     </div>
   );
 }

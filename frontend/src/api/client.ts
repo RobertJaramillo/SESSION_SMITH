@@ -5,14 +5,38 @@ import type { ApiCanonEvent, ApiEntry, ApiJob, ApiProposal, ApiWorkspaceSummary,
 // Override via VITE_API_BASE to point at a real backend, or setApiBase() in tests.
 let apiBase = (import.meta.env.VITE_API_BASE as string | undefined) ?? '';
 
+// Deliberately memory-only. A BYOK credential must never be written to
+// localStorage, sessionStorage, IndexedDB, or the URL. It is sent only to the
+// same-origin backend for an AI job, then disappears when the page reloads or
+// the user logs out. Persistent per-user credentials need real authentication
+// and encrypted server-side storage, which this beta does not have yet.
+let sessionOpenAIKey = '';
+
+export function setSessionOpenAIKey(apiKey: string) {
+  sessionOpenAIKey = apiKey.trim();
+}
+
+export function clearSessionAIProvider() {
+  sessionOpenAIKey = '';
+}
+
 export function setApiBase(base: string) {
   apiBase = base;
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const headers = new Headers(init?.headers);
+  headers.set('Content-Type', 'application/json');
+  const isAIJob = init?.method === 'POST' && (
+    path.endsWith('/notes') || path.endsWith('/prep-jobs') || path.endsWith('/build-world')
+  );
+  if (sessionOpenAIKey && isAIJob) {
+    headers.set('X-Session-Smith-Provider', 'openai');
+    headers.set('X-Session-Smith-API-Key', sessionOpenAIKey);
+  }
   const response = await fetch(`${apiBase}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
     ...init,
+    headers,
   });
   if (!response.ok) {
     throw new Error(`Request to ${path} failed with ${response.status}`);

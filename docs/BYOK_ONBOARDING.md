@@ -1,23 +1,16 @@
 # Bring Your Own Key (BYOK) onboarding
 
-Session Smith has three distinct ways to start using AI. The UI deliberately
-keeps these separate so users understand who pays for generation and where their
-campaign notes are sent.
+Session Smith offers an OpenAI bring-your-own-key flow today, with Gemini and a
+hosted plan shown as upcoming options. The UI makes clear who pays for
+generation and where campaign notes are sent.
 
 | Option | Who pays for AI use? | Availability | Best for |
 | --- | --- | --- | --- |
-| Built-in demo | Nobody | Available now | Trying the app without a provider account |
 | OpenAI BYOK | The user's OpenAI account | Available now, per browser session | Private-beta GMs who want live generation |
 | Gemini BYOK | The user's Google account | Provider setup guide only; adapter is not implemented | Users who want to prepare for Gemini support |
 | Session Smith hosted AI | Session Smith, with plan limits | Not available | Future convenience plan |
 
 ## User-facing setup instructions
-
-### Start with the demo
-
-Choose **Start with the demo** during AI setup. It runs offline and has no API
-cost. Its suggestions are predictable placeholders rather than live model
-output.
 
 ### Connect an OpenAI key
 
@@ -49,9 +42,8 @@ allowance. See the [Google Cloud Free Trial FAQ](https://cloud.google.com/signup
 
 ## Product recommendation
 
-For the private beta, keep **demo mode free** and offer **OpenAI BYOK**. It
-avoids charging Session Smith for unbounded generation while users validate the
-product.
+For the private beta, offer **OpenAI BYOK**. It avoids charging Session Smith
+for unbounded generation while users validate the product.
 
 A $5/month hosted-AI plan should be considered only after these controls exist:
 
@@ -69,7 +61,9 @@ does not make the underlying LLM usage free.
 
 This repository's sign-in screen is currently a UI-only beta gate, not real
 authentication. Therefore Session Smith intentionally does **not** persist a
-user's provider key. The implemented OpenAI flow is session-only BYOK.
+user's provider key. The implemented OpenAI flow is session-only BYOK. The
+offline demo provider remains an internal development and test fallback; it is
+not offered as a user-facing onboarding choice.
 
 Before adding persistent keys or Gemini execution, implement authentication,
 authorized user/campaign ownership, encrypted credential storage, and an

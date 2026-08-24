@@ -13,6 +13,8 @@ import backend.app as campaign_api
 from backend.db import postgres_enabled
 from backend.repositories.campaigns import InMemoryCampaignRepository
 from backend.tests._asgi_client import request, request_raw
+from fastapi import HTTPException
+from starlette.requests import Request
 
 
 def _reportlab_available() -> bool:
@@ -21,6 +23,30 @@ def _reportlab_available() -> bool:
         return True
     except Exception:
         return False
+
+
+def _request_with_headers(headers: dict[str, str]) -> Request:
+    return Request({
+        "type": "http",
+        "method": "POST",
+        "scheme": "https",
+        "path": "/v1/campaigns/example/notes",
+        "headers": [(name.lower().encode(), value.encode()) for name, value in headers.items()],
+    })
+
+
+class ByokProviderTests(unittest.TestCase):
+    def test_openai_session_key_creates_a_request_scoped_provider(self) -> None:
+        provider = campaign_api._provider_for_request(_request_with_headers({
+            "X-Session-Smith-Provider": "openai",
+            "X-Session-Smith-API-Key": "sk-test-key",
+        }))
+        self.assertEqual(provider.name, "openai")
+
+    def test_unknown_byok_provider_is_rejected(self) -> None:
+        with self.assertRaises(HTTPException) as raised:
+            campaign_api._provider_for_request(_request_with_headers({"X-Session-Smith-Provider": "gemini"}))
+        self.assertEqual(raised.exception.status_code, 422)
 
 
 @unittest.skipIf(

@@ -27,6 +27,25 @@ describe('app entry flow', () => {
     expect(screen.queryByText(/three clean lanes/i)).toBeNull();
   });
 
+  it('offers a memory-only OpenAI setup after sign in', async () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByRole('button', { name: /^sign in$/i }));
+    expect(screen.getByRole('dialog', { name: /choose how to power your campaign/i })).toBeTruthy();
+    expect(screen.queryByText(/demo mode|deterministic sample ai/i)).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: /use my openai api key/i }));
+    const connect = screen.getByRole('button', { name: /use openai this session/i });
+    expect(connect.hasAttribute('disabled')).toBe(true);
+
+    fireEvent.change(screen.getByPlaceholderText(/paste your key/i), { target: { value: 'sk-test-key' } });
+    fireEvent.click(screen.getByRole('checkbox', { name: /used only for this browser session/i }));
+    expect(connect.hasAttribute('disabled')).toBe(false);
+
+    fireEvent.click(connect);
+    expect(screen.queryByRole('dialog', { name: /choose how to power your campaign/i })).toBeNull();
+  });
+
   it('can open directly to the dashboard for page review', () => {
     window.history.pushState({}, '', '/?preview=dashboard');
     render(<App />);

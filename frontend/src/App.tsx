@@ -1,9 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
-import { AppShell, PageHeader, StatCard } from './components/Layout';
+import { AppShell, PageHeader } from './components/Layout';
 import { LoginPage } from './pages/LoginPage';
 import { ProviderOnboardingModal as ProviderOnboardingDialog } from './components/ProviderOnboardingModal';
 import { SettingsModal as AccountSettingsModal } from './components/SettingsModal';
+import { CampaignOverviewPage as CampaignOverview } from './features/workspace/CampaignOverviewPage';
+import { NotesPage as SessionNotesPage } from './features/workspace/NotesPage';
+import { ProposalCard, ReviewQueuePage as CampaignReviewQueuePage } from './features/workspace/ReviewQueuePage';
+import { SessionPrepPage as CampaignSessionPrepPage, type PrepState } from './features/workspace/SessionPrepPage';
+import { CanonBrowserPage as CampaignCanonBrowserPage } from './features/workspace/CanonBrowserPage';
 import {
   WORLD_CATEGORIES,
   campaignWorkspaceNavItems,
@@ -35,7 +40,6 @@ import {
 } from './api/client';
 import type { ApiCanonEvent, ApiEntry, ApiProposal, ApiWorkspaceSummary, ReviewAction } from './api/types';
 
-type PrepState = { goal: string; tone: string; memories: string; outline: string };
 type NoteSubmission = { note: string; sessionNumber: string; title: string };
 type AIProvider = 'demo' | 'openai';
 
@@ -292,7 +296,7 @@ function CampaignWorkspaceView({ campaign, activePage, onNavigate, onBackToCampa
       onBackToCampaigns={onBackToCampaigns}
       onNavigate={onNavigate}
     >
-      {activePage === 'campaign-overview' && <CampaignOverviewPage campaign={campaign} workspace={workspace} onNavigate={onNavigate} />}
+      {activePage === 'campaign-overview' && <CampaignOverview campaign={campaign} workspace={workspace} onNavigate={onNavigate} />}
       {activePage === 'world-builder' && (
         <WorldBuilderPage
           campaignId={campaign.campaignId}
@@ -311,10 +315,10 @@ function CampaignWorkspaceView({ campaign, activePage, onNavigate, onBackToCampa
           reviewFeedback={reviewFeedback}
         />
       )}
-      {activePage === 'session-prep' && <SessionPrepPage prep={prep} generating={prepGenerating} onChange={(patch) => setPrep((current) => ({ ...current, ...patch }))} onGenerate={generatePrep} />}
-      {activePage === 'notes' && <NotesPage campaign={campaign} extracting={extracting} onSubmit={submitNote} />}
-      {activePage === 'review-queue' && <ReviewQueuePage proposals={proposals} feedback={reviewFeedback} loading={loading} error={loadError} onReview={handleReview} />}
-      {activePage === 'canon-browser' && <CanonBrowserPage campaignId={campaign.campaignId} />}
+      {activePage === 'session-prep' && <CampaignSessionPrepPage prep={prep} generating={prepGenerating} onChange={(patch) => setPrep((current) => ({ ...current, ...patch }))} onGenerate={generatePrep} />}
+      {activePage === 'notes' && <SessionNotesPage campaign={campaign} extracting={extracting} onSubmit={submitNote} />}
+      {activePage === 'review-queue' && <CampaignReviewQueuePage proposals={proposals} feedback={reviewFeedback} loading={loading} error={loadError} onReview={handleReview} />}
+      {activePage === 'canon-browser' && <CampaignCanonBrowserPage campaignId={campaign.campaignId} />}
       {activePage === 'settings' && <SettingsPage campaign={campaign} />}
     </AppShell>
   );
@@ -519,165 +523,6 @@ function CreateCampaignDialog({ onClose, onCreate }: { onClose: () => void; onCr
         </div>
       </section>
     </div>
-  );
-}
-
-function ProviderOnboardingModal({ onClose, onConfigure }: { onClose: () => void; onConfigure: (provider: AIProvider, apiKey?: string) => void }) {
-  const [choice, setChoice] = useState<'start' | 'openai' | 'gemini' | 'hosted'>('start');
-  const [apiKey, setApiKey] = useState('');
-  const [acknowledged, setAcknowledged] = useState(false);
-  const isOpenAI = choice === 'openai';
-
-  return (
-    <div className="modal-backdrop" role="presentation">
-      <section aria-labelledby="provider-onboarding-title" aria-modal="true" className="settings-modal provider-onboarding-modal" role="dialog">
-        <div className="settings-modal-header">
-          <div>
-            <span className="eyebrow">AI setup</span>
-            <h2 id="provider-onboarding-title">Choose how to power your campaign</h2>
-          </div>
-          <button aria-label="Close AI setup" className="modal-close-button" onClick={onClose} type="button">×</button>
-        </div>
-
-        {choice === 'start' && (
-          <div className="provider-choice-list">
-            <section className="provider-choice-section" aria-labelledby="available-provider-options">
-              <div className="provider-section-header">
-                <span id="available-provider-options">Available now</span>
-                <p>Connect a key you already own to use live AI generation.</p>
-              </div>
-              <button className="provider-choice provider-choice-openai provider-choice-primary" onClick={() => setChoice('openai')} type="button">
-                <span>Available now</span>
-                <strong>Use my OpenAI API key</strong>
-                <p>Live generation, billed by OpenAI. Your key stays in this browser session.</p>
-              </button>
-            </section>
-
-            <section className="provider-choice-section provider-choice-section-secondary" aria-labelledby="future-provider-options">
-              <div className="provider-section-header">
-                <span id="future-provider-options">Coming next</span>
-              </div>
-              <button className="provider-choice provider-choice-compact" onClick={() => setChoice('gemini')} type="button">
-                <span>Gemini free tier</span>
-                <strong>Read the setup guide</strong>
-                <p>Prepare a Gemini key now; Session Smith support is coming next.</p>
-              </button>
-              <button className="provider-choice provider-choice-hosted" onClick={() => setChoice('hosted')} type="button">
-                <span className="provider-choice-status">Coming soon</span>
-                <strong>Session Smith Hosted AI · $5/month</strong>
-                <p>Not purchasable yet. We’ll launch it with clear included usage, billing, and account controls.</p>
-              </button>
-            </section>
-          </div>
-        )}
-
-        {isOpenAI && (
-          <div className="setting-update-body provider-detail">
-            <button className="link-button back-button" onClick={() => setChoice('start')} type="button">← All options</button>
-            <h3>Connect OpenAI for this session</h3>
-            <ol>
-              <li><a href="https://platform.openai.com/api-keys" rel="noreferrer" target="_blank">Create an OpenAI API key</a> in your OpenAI project.</li>
-              <li>Set a project budget and usage limits before using the key here.</li>
-              <li>Paste the key below. It is sent to Session Smith only when an AI job runs.</li>
-            </ol>
-            <aside className="provider-budget-note">
-              <strong>Suggested starting limit: $5/month</strong>
-              <p>Create a dedicated OpenAI project, set a hard monthly spend limit and an alert, then increase it only after you understand your campaign’s usage.</p>
-            </aside>
-            <details className="provider-key-guide">
-              <summary>Need help getting your API key?</summary>
-              <ol>
-                <li>Open the OpenAI API platform and sign in or create an account.</li>
-                <li>Create a dedicated project for Session Smith, then add billing or credits to that project.</li>
-                <li>Set the $5 monthly spending limit and alert for the project.</li>
-                <li>On the API keys page, create a new secret key, copy it once, and paste it below. Do not share it with anyone else.</li>
-              </ol>
-              <a href="https://platform.openai.com/api-keys" rel="noreferrer" target="_blank">Open the OpenAI API keys page →</a>
-            </details>
-            <label>
-              OpenAI API key
-              <input autoComplete="off" onChange={(event) => setApiKey(event.target.value)} placeholder="Paste your key" spellCheck="false" type="password" value={apiKey} />
-            </label>
-            <label className="checkbox-label provider-acknowledgement">
-              <input checked={acknowledged} onChange={(event) => setAcknowledged(event.target.checked)} type="checkbox" />
-              <span>I understand this key is used only for this browser session and will be cleared on refresh or log out.</span>
-            </label>
-            <p className="provider-security-note">Session Smith does not save this key to browser storage, its database, URLs, or job history. Use this beta flow only over HTTPS in production.</p>
-            <div className="settings-confirm-actions">
-              <button className="secondary" onClick={onClose} type="button">Not now</button>
-              <button disabled={!acknowledged || apiKey.trim().length < 8} onClick={() => onConfigure('openai', apiKey)} type="button">Use OpenAI this session</button>
-            </div>
-          </div>
-        )}
-
-        {choice === 'gemini' && (
-          <div className="setting-update-body provider-detail">
-            <button className="link-button back-button" onClick={() => setChoice('start')} type="button">← All options</button>
-            <h3>Try Gemini without committing to a paid plan</h3>
-            <ol>
-              <li><a href="https://aistudio.google.com/app/apikey" rel="noreferrer" target="_blank">Create a Gemini API key in Google AI Studio</a>.</li>
-              <li>Choose a model with a free-tier allowance and check its current rate limits before using it.</li>
-              <li>Do not paste a Gemini key into Session Smith yet—the Gemini adapter has not been implemented.</li>
-            </ol>
-            <p className="provider-security-note">Google's eligible-new-customer Cloud trial is separate: it currently offers $300 in credits for 90 days. The Gemini Developer API also has free-tier options with limits and distinct data-use terms.</p>
-            <div className="settings-confirm-actions"><button onClick={onClose} type="button">Close setup</button></div>
-          </div>
-        )}
-
-        {choice === 'hosted' && (
-          <div className="setting-update-body provider-detail">
-            <button className="link-button back-button" onClick={() => setChoice('start')} type="button">← All options</button>
-            <h3>Hosted AI is not available yet</h3>
-            <p>A $5/month plan can work as a convenience subscription, but it should not promise unlimited AI. Before launch, it needs real accounts, encrypted provider credentials, payment handling, and a clear monthly request or token allowance.</p>
-            <p className="provider-security-note">For the beta, connect your own OpenAI key. Your provider bill stays with your provider.</p>
-            <div className="settings-confirm-actions"><button onClick={onClose} type="button">Close setup</button></div>
-          </div>
-        )}
-      </section>
-    </div>
-  );
-}
-
-
-function CampaignOverviewPage({ campaign, workspace, onNavigate }: { campaign: CampaignSummary; workspace: ApiWorkspaceSummary | null; onNavigate: (page: CampaignWorkspacePage) => void }) {
-  const seed = getCampaignWorkspace(campaign);
-  const sessionDocCount = workspace?.sessionDocCount ?? seed.sessionDocCount;
-  const proposalsWaiting = workspace?.proposalsWaiting ?? 0;
-  const recentActivity = workspace?.recentActivity ?? seed.recentActivity;
-  return (
-    <section>
-      <PageHeader
-        kicker="Campaign Overview"
-        title="At a glance"
-        body="Jump into prep, add session notes, review AI proposals, or manage approved canon."
-      />
-      <div className="stat-grid">
-        <StatCard label="Last completed session" value={`${campaign.lastSessionNumber}`} tone="good" />
-        <StatCard label="AI proposals waiting" value={`${proposalsWaiting}`} tone={proposalsWaiting > 0 ? 'warn' : 'default'} />
-        <StatCard label="Session docs" value={`${sessionDocCount}`} />
-        <StatCard label="World categories" value={`${WORLD_CATEGORIES.length}`} />
-      </div>
-      <div className="two-column">
-        <article className="card">
-          <h3>Next best actions</h3>
-          <div className="action-stack">
-            <button onClick={() => onNavigate('notes')} type="button">Create next session document</button>
-            <button onClick={() => onNavigate('session-prep')} type="button">Generate prep from approved memory</button>
-            <button onClick={() => onNavigate('review-queue')} type="button">Review pending AI proposals</button>
-          </div>
-        </article>
-        <article className="card timeline">
-          <h3>Recent activity</h3>
-          {recentActivity.length === 0 ? (
-            <p className="empty-state">No activity yet. Add a session document to start building this campaign's memory.</p>
-          ) : (
-            recentActivity.map((item) => (
-              <p key={`${item.actor}-${item.detail}`}><strong>{item.actor}:</strong> {item.detail}</p>
-            ))
-          )}
-        </article>
-      </div>
-    </section>
   );
 }
 
@@ -976,190 +821,6 @@ function WorldBuilderPage({
           </div>
         </article>
       )}
-    </section>
-  );
-}
-
-function SessionPrepPage({ prep, generating, onChange, onGenerate }: { prep: PrepState; generating: boolean; onChange: (patch: Partial<PrepState>) => void; onGenerate: () => void }) {
-  return (
-    <section>
-      <PageHeader kicker="Session Prep" title="Generate the next table-ready session" body="Draft the next session from approved canon only. Review and edit everything before you bring it to the table." />
-      <div className="two-column">
-        <article className="card">
-          <h3>Prep controls</h3>
-          <label>Session goal<input value={prep.goal} onChange={(event) => onChange({ goal: event.target.value })} placeholder="What should the next session accomplish?" /></label>
-          <label>Desired tone<select value={prep.tone} onChange={(event) => onChange({ tone: event.target.value })}><option value="wonder">Wonder</option><option value="danger">Danger</option><option value="intrigue">Intrigue</option></select></label>
-          <label>Use memories<textarea value={prep.memories} onChange={(event) => onChange({ memories: event.target.value })} placeholder="Which approved memories should the prep draw from?" /></label>
-          <button disabled={generating} onClick={onGenerate} type="button">{generating ? 'Generating prep…' : 'Queue AI prep job'}</button>
-        </article>
-        <article className="card">
-          <h3>Generated outline</h3>
-          {generating ? (
-            <p className="empty-state" role="status">Pulling approved canon and drafting an outline…</p>
-          ) : prep.outline.trim() === '' ? (
-            <p className="empty-state">No prep generated yet. Set a goal and queue an AI prep job to build an outline.</p>
-          ) : (
-            <label>
-              Edit before your session
-              <textarea value={prep.outline} onChange={(event) => onChange({ outline: event.target.value })} />
-            </label>
-          )}
-        </article>
-      </div>
-    </section>
-  );
-}
-
-function NotesPage({ campaign, extracting, onSubmit }: { campaign: CampaignSummary; extracting: boolean; onSubmit: (submission: NoteSubmission) => void }) {
-  const nextSession = campaign.lastSessionNumber + 1;
-  const [sessionNumber, setSessionNumber] = useState(`${nextSession}`);
-  const [title, setTitle] = useState('');
-  const [note, setNote] = useState('');
-  const canSubmit = note.trim().length > 0 && sessionNumber.trim().length > 0 && !extracting;
-
-  return (
-    <section>
-      <PageHeader kicker="Session Notes" title="Log each session as its own entry" body="Session 0 is your initial world setup; Session 1 and up capture later play. Paste your raw notes and the AI worker turns them into canon candidates for your review." />
-      <article className="card full-card">
-        <label>Session number<input min="0" onChange={(event) => setSessionNumber(event.target.value)} type="number" value={sessionNumber} /></label>
-        <label>Session title<input onChange={(event) => setTitle(event.target.value)} placeholder={`Session ${nextSession} — short title`} value={title} /></label>
-        <label>
-          Raw table notes
-          <textarea
-            value={note}
-            onChange={(event) => setNote(event.target.value)}
-            placeholder="Paste this session's raw table notes. When you submit, the AI worker reads them and proposes canon changes for your review."
-          />
-        </label>
-        <div className="button-row">
-          <button disabled={!canSubmit} onClick={() => onSubmit({ note, sessionNumber, title })} type="button">
-            {extracting ? 'Extracting canon candidates…' : 'Submit notes for AI review'}
-          </button>
-          <button className="secondary" disabled={extracting} onClick={() => { setNote(''); setTitle(''); }} type="button">Clear</button>
-        </div>
-        {extracting && <p className="empty-state" role="status">The AI worker is reading your notes and drafting proposed canon changes…</p>}
-      </article>
-    </section>
-  );
-}
-
-function ReviewQueuePage({ proposals, feedback, loading, error, onReview }: { proposals: ApiProposal[]; feedback: string; loading: boolean; error: string; onReview: (id: string, action: ReviewAction, detail?: string) => void }) {
-  return (
-    <section>
-      <PageHeader kicker="GM Review Queue" title="Approve, edit, or reject proposed memory" body="Nothing the AI proposes becomes canon until you approve it. Review each suggestion, then approve, edit, or reject it." />
-      {feedback && <p className="empty-state" role="status">{feedback}</p>}
-      {error && <p className="settings-validation-message" role="status">{error}</p>}
-      {loading ? (
-        <article className="card full-card">
-          <p className="empty-state" role="status">Loading proposals…</p>
-        </article>
-      ) : proposals.length === 0 ? (
-        <article className="card full-card">
-          <p className="empty-state">No proposals waiting. Submit session notes and the AI will suggest canon changes here for your review.</p>
-        </article>
-      ) : (
-        <div className="proposal-list">
-          {proposals.map((proposal) => (
-            <ProposalCard key={proposal.id} proposal={proposal} onReview={onReview} />
-          ))}
-        </div>
-      )}
-    </section>
-  );
-}
-
-function ProposalCard({ proposal, onReview }: { proposal: ApiProposal; onReview: (id: string, action: ReviewAction, detail?: string) => void }) {
-  const [mode, setMode] = useState<'view' | 'edit' | 'reject'>('view');
-  const [draft, setDraft] = useState(proposal.summary);
-  const [reason, setReason] = useState('');
-
-  return (
-    <article className="card proposal-card">
-      <span className="eyebrow">{proposal.category} · {proposal.confidence} confidence{proposal.source ? ` · ${proposal.source}` : ''}</span>
-      <h3>{proposal.title}</h3>
-      {proposal.conflicts && proposal.conflicts.length > 0 && (
-        <div className="settings-validation-message" role="alert">
-          <p><strong>Possible conflict with existing canon:</strong></p>
-          {proposal.conflicts.map((conflict) => <p key={conflict}>{conflict}</p>)}
-        </div>
-      )}
-      {mode === 'edit' ? (
-        <label>
-          Edited canon summary
-          <textarea value={draft} onChange={(event) => setDraft(event.target.value)} />
-        </label>
-      ) : mode === 'reject' ? (
-        <label>
-          Reason (optional)
-          <textarea value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Why is this not canon? Helps refine future extractions." />
-        </label>
-      ) : (
-        <p>{proposal.summary}</p>
-      )}
-      {mode === 'edit' ? (
-        <div className="button-row">
-          <button disabled={!draft.trim()} onClick={() => onReview(proposal.id, 'edit_approve', draft.trim())} type="button">Save &amp; approve</button>
-          <button className="secondary" onClick={() => { setMode('view'); setDraft(proposal.summary); }} type="button">Cancel</button>
-        </div>
-      ) : mode === 'reject' ? (
-        <div className="button-row">
-          <button onClick={() => onReview(proposal.id, 'reject', reason.trim() || undefined)} type="button">Confirm reject</button>
-          <button className="secondary" onClick={() => { setMode('view'); setReason(''); }} type="button">Cancel</button>
-        </div>
-      ) : (
-        <div className="button-row">
-          <button onClick={() => onReview(proposal.id, 'approve')} type="button">Approve</button>
-          <button className="secondary" onClick={() => setMode('edit')} type="button">Edit</button>
-          <button className="secondary" onClick={() => setMode('reject')} type="button">Reject</button>
-        </div>
-      )}
-    </article>
-  );
-}
-
-function CanonBrowserPage({ campaignId }: { campaignId: string }) {
-  const [canon, setCanon] = useState<ApiCanonEvent[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [query, setQuery] = useState('');
-
-  useEffect(() => {
-    let active = true;
-    listCanonEvents(campaignId)
-      .then((data) => { if (active) { setCanon(data); setLoading(false); } })
-      .catch(() => { if (active) setLoading(false); });
-    return () => { active = false; };
-  }, [campaignId]);
-
-  const needle = query.trim().toLowerCase();
-  const filtered = needle
-    ? canon.filter((item) => `${item.category} ${item.summary}`.toLowerCase().includes(needle))
-    : canon;
-
-  return (
-    <section>
-      <PageHeader kicker="Canon Memory Browser" title="Search approved campaign truth" body="Browse the approved memory the AI is allowed to draw on when generating prep and answers." />
-      <article className="card full-card">
-        <label>Search canon<input onChange={(event) => setQuery(event.target.value)} placeholder="NPC, faction, region, artifact, player character..." value={query} /></label>
-        {loading ? (
-          <p className="empty-state" role="status">Loading canon…</p>
-        ) : canon.length === 0 ? (
-          <p className="empty-state">No approved canon yet. Approve proposals in the review queue to build this campaign's memory.</p>
-        ) : filtered.length === 0 ? (
-          <p className="empty-state" role="status">No canon matches “{query}”.</p>
-        ) : (
-          <>
-            <p className="empty-state" role="status">Showing {filtered.length} of {canon.length} approved memories.</p>
-            <div className="canon-list">
-              {filtered.map((item) => (
-                <article className="canon-item" key={item.id}>
-                  <span className="eyebrow">{item.category}</span>
-                  <p>{item.summary}</p>
-                </article>
-              ))}
-            </div>
-          </>
-        )}
-      </article>
     </section>
   );
 }

@@ -194,6 +194,8 @@ export const handlers = [
         body.description?.trim() ||
         "New campaign world awaiting its first session.",
       worldStatus: "draft",
+      visibility: "private",
+      model: "balanced",
     };
     const owned = ensureSections().find((section) => section.id === "owned");
     owned?.campaigns.unshift(campaign);
@@ -226,10 +228,14 @@ export const handlers = [
     const body = (await request.json()) as {
       name?: string;
       description?: string;
+      visibility?: CampaignSummary["visibility"];
+      model?: CampaignSummary["model"];
     };
     if (body.name?.trim()) campaign.name = body.name.trim();
     if (typeof body.description === "string" && body.description.trim())
       campaign.description = body.description.trim();
+    if (body.visibility) campaign.visibility = body.visibility;
+    if (body.model) campaign.model = body.model;
     return HttpResponse.json({ data: campaign });
   }),
 

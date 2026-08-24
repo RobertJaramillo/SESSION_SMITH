@@ -171,7 +171,7 @@ def data(value: Any, response_status: int = status.HTTP_200_OK) -> Any:
     return JSONResponse(status_code=response_status, content={"data": value})
 
 
-def _provider_for_request(request: Request):
+def _provider_for_request(request: Request, model_profile: str = "balanced"):
     """Select the configured provider or a browser-session BYOK provider.
 
     A user-supplied key is intentionally accepted only through request headers:
@@ -182,6 +182,12 @@ def _provider_for_request(request: Request):
     """
     provider_name = request.headers.get("X-Session-Smith-Provider")
     if not provider_name:
+        if getattr(_llm_provider, "name", None) == "openai":
+            return get_provider(
+                "openai",
+                api_key=_llm_provider.api_key,
+                model_profile=model_profile,
+            )
         return _llm_provider
     if provider_name != "openai":
         raise HTTPException(
@@ -199,7 +205,7 @@ def _provider_for_request(request: Request):
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail={"code": "invalid_byok_key", "message": "The API key is not valid."},
         )
-    return get_provider("openai", api_key=api_key)
+    return get_provider("openai", api_key=api_key, model_profile=model_profile)
 
 
 def _campaign_or_404(campaign_id: str) -> dict[str, Any]:
@@ -446,9 +452,9 @@ def _complete_extraction(job_id: str, campaign_id: str, payload: NotesCreate, pr
 
 @app.post("/v1/campaigns/{campaign_id}/notes")
 def submit_notes(campaign_id: str, payload: NotesCreate, background_tasks: BackgroundTasks, request: Request) -> Any:
-    provider = _provider_for_request(request)
     with store.lock:
-        _campaign_or_404(campaign_id)
+        campaign = _campaign_or_404(campaign_id)
+        provider = _provider_for_request(request, campaign.get("model", "balanced"))
         if postgres_enabled():
             try:
                 note_id, session_id = sessions.create_note(
@@ -517,9 +523,9 @@ def _complete_prep(job_id: str, campaign_id: str, payload: PrepJobCreate, provid
 
 @app.post("/v1/campaigns/{campaign_id}/prep-jobs")
 def submit_prep_job(campaign_id: str, payload: PrepJobCreate, background_tasks: BackgroundTasks, request: Request) -> Any:
-    provider = _provider_for_request(request)
     with store.lock:
-        _campaign_or_404(campaign_id)
+        campaign = _campaign_or_404(campaign_id)
+        provider = _provider_for_request(request, campaign.get("model", "balanced"))
         if postgres_enabled():
             job_id = jobs.create(campaign_id, job_type="generate_session_prep")
             background_tasks.add_task(_complete_prep, job_id, campaign_id, payload, provider)
@@ -666,9 +672,9 @@ def build_world(campaign_id: str, payload: WorldBuildCreate, background_tasks: B
     """Build (or rebuild) the world from the GM's entries + checked empty categories
     via the two-pass generator. Returns PENDING proposals for review; does NOT seal
     (that's the separate seal-world action). Repeatable while the world is draft."""
-    provider = _provider_for_request(request)
     with store.lock:
         campaign = _campaign_or_404(campaign_id)
+        provider = _provider_for_request(request, campaign.get("model", "balanced"))
         if campaign.get("worldStatus") == "sealed":
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,

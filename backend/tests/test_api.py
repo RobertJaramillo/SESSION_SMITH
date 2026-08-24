@@ -40,8 +40,9 @@ class ByokProviderTests(unittest.TestCase):
         provider = campaign_api._provider_for_request(_request_with_headers({
             "X-Session-Smith-Provider": "openai",
             "X-Session-Smith-API-Key": "sk-test-key",
-        }))
+        }), model_profile="premium")
         self.assertEqual(provider.name, "openai")
+        self.assertEqual(provider.model_profile, "premium")
 
     def test_unknown_byok_provider_is_rejected(self) -> None:
         with self.assertRaises(HTTPException) as raised:
@@ -118,6 +119,24 @@ class ApiContractTests(unittest.TestCase):
             response_status, jobs = await request("GET", "/v1/campaigns/campaign_glass_moon_exile/jobs")
             self.assertEqual(response_status, 200)
             self.assertIn(job_id, [item["id"] for item in jobs["data"]])
+
+        asyncio.run(scenario())
+
+    def test_campaign_settings_round_trip(self) -> None:
+        async def scenario() -> None:
+            campaign_id = "campaign_glass_moon_exile"
+            status_code, updated = await request(
+                "PATCH",
+                f"/v1/campaigns/{campaign_id}",
+                {"visibility": "shared", "model": "premium"},
+            )
+            self.assertEqual(status_code, 200)
+            self.assertEqual(updated["data"]["visibility"], "shared")
+            self.assertEqual(updated["data"]["model"], "premium")
+
+            _, fetched = await request("GET", f"/v1/campaigns/{campaign_id}")
+            self.assertEqual(fetched["data"]["visibility"], "shared")
+            self.assertEqual(fetched["data"]["model"], "premium")
 
         asyncio.run(scenario())
 

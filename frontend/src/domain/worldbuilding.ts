@@ -209,6 +209,8 @@ export type CampaignSummary = {
   // World-building lifecycle: 'draft' = World Builder editable; 'sealed' = world
   // built and read-only, further change comes only from session notes.
   worldStatus: "draft" | "sealed";
+  visibility: "private" | "shared";
+  model: "cheap" | "balanced" | "premium";
 };
 
 export type CampaignListSection = {
@@ -236,6 +238,8 @@ export const CAMPAIGN_LISTS: CampaignListSection[] = [
         description:
           "Dark political fantasy about oath law, buried history, and the Flood of Bells.",
         worldStatus: "sealed",
+        visibility: "private",
+        model: "balanced",
       },
       {
         campaignId: "campaign_glass_moon_exile",
@@ -248,6 +252,8 @@ export const CAMPAIGN_LISTS: CampaignListSection[] = [
         description:
           "Planar survival campaign draft waiting for session 0 worldbuilding notes.",
         worldStatus: "draft",
+        visibility: "private",
+        model: "balanced",
       },
     ],
   },
@@ -268,6 +274,8 @@ export const CAMPAIGN_LISTS: CampaignListSection[] = [
         description:
           "Library-city mystery shared with you as a player character contributor.",
         worldStatus: "sealed",
+        visibility: "shared",
+        model: "balanced",
       },
     ],
   },
@@ -287,6 +295,8 @@ export const CAMPAIGN_LISTS: CampaignListSection[] = [
         description:
           "Current live table with pending review proposals from sessions 9 and 10.",
         worldStatus: "sealed",
+        visibility: "private",
+        model: "balanced",
       },
     ],
   },

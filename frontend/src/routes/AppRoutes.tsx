@@ -14,6 +14,7 @@ import { CampaignSettingsPage } from "../features/workspace/CampaignSettingsPage
 import { WorldBuilderPage as CampaignWorldBuilderPage } from "../features/workspace/WorldBuilderPage";
 import {
   describeBuildFailure,
+  describePrepFailure,
   type BuildFeedback,
 } from "../features/workspace/buildFeedback";
 import {
@@ -171,6 +172,7 @@ function CampaignWorkspaceView({
     outline: seed.prepOutline.join("\n"),
   }));
   const [prepGenerating, setPrepGenerating] = useState(false);
+  const [prepFeedback, setPrepFeedback] = useState<BuildFeedback | null>(null);
 
   const refresh = useCallback(async () => {
     const [pending, entries, summary, canon, fresh] = await Promise.all([
@@ -330,6 +332,7 @@ function CampaignWorkspaceView({
   const generatePrep = async () => {
     if (prepGenerating) return;
     setPrepGenerating(true);
+    setPrepFeedback(null);
     try {
       const { jobId } = await submitPrepJob(campaign.campaignId, {
         goal: prep.goal,
@@ -337,11 +340,25 @@ function CampaignWorkspaceView({
         memories: prep.memories,
       });
       const job = await pollJob(jobId);
+      if (job.status === "failed") {
+        setPrepFeedback(describePrepFailure(job.error));
+        return;
+      }
       const outline = job.result?.outline;
-      if (outline)
+      if (outline) {
         setPrep((current) => ({ ...current, outline: outline.join("\n") }));
-    } catch {
-      // Keep the previous outline if generation fails.
+        setPrepFeedback({
+          kind: "success",
+          title: "Session prep is ready",
+          message: "Review and edit the outline before you bring it to the table.",
+        });
+      } else {
+        setPrepFeedback(describePrepFailure(null));
+      }
+    } catch (error) {
+      setPrepFeedback(
+        describePrepFailure(error instanceof Error ? error.message : null),
+      );
     } finally {
       setPrepGenerating(false);
     }
@@ -383,6 +400,7 @@ function CampaignWorkspaceView({
         <CampaignSessionPrepPage
           prep={prep}
           generating={prepGenerating}
+          feedback={prepFeedback}
           onChange={(patch) => setPrep((current) => ({ ...current, ...patch }))}
           onGenerate={generatePrep}
         />

@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { describeBuildFailure } from "../src/features/workspace/buildFeedback";
+import {
+  describeBuildFailure,
+  describePrepFailure,
+} from "../src/features/workspace/buildFeedback";
 
 describe("world build feedback", () => {
   it("turns OpenAI credit errors into safe, actionable guidance", () => {
@@ -27,5 +30,14 @@ describe("world build feedback", () => {
       title: "Your OpenAI key was not accepted",
     });
     expect(JSON.stringify(feedback)).not.toContain("sk-secret-value");
+  });
+
+  it("uses session-prep wording for a failed prep job", () => {
+    const feedback = describePrepFailure("Job polling timed out");
+
+    expect(feedback).toMatchObject({
+      kind: "error",
+      title: "The session prep took too long",
+    });
   });
 });

@@ -1,4 +1,5 @@
 import { PageHeader } from "../../components/Layout";
+import type { BuildFeedback } from "./buildFeedback";
 
 export type PrepState = {
   goal: string;
@@ -10,11 +11,13 @@ export type PrepState = {
 export function SessionPrepPage({
   prep,
   generating,
+  feedback,
   onChange,
   onGenerate,
 }: {
   prep: PrepState;
   generating: boolean;
+  feedback: BuildFeedback | null;
   onChange: (patch: Partial<PrepState>) => void;
   onGenerate: () => void;
 }) {
@@ -58,6 +61,18 @@ export function SessionPrepPage({
           <button disabled={generating} onClick={onGenerate} type="button">
             {generating ? "Generating prep…" : "Queue AI prep job"}
           </button>
+          {!generating && feedback && (
+            <section
+              className={`build-feedback build-feedback-${feedback.kind}`}
+              role={feedback.kind === "error" ? "alert" : "status"}
+            >
+              <h3>{feedback.title}</h3>
+              <p>{feedback.message}</p>
+              {feedback.kind === "error" && (
+                <p className="build-feedback-guidance">{feedback.guidance}</p>
+              )}
+            </section>
+          )}
         </article>
         <article className="card">
           <h3>Generated outline</h3>

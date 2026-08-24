@@ -14,8 +14,8 @@ export function CampaignSettingsPage({
   const [status, setStatus] = useState("");
   const [confirmingArchive, setConfirmingArchive] = useState(false);
   const [name, setName] = useState(campaign.name);
-  const [visibility, setVisibility] = useState("private");
-  const [model, setModel] = useState("balanced");
+  const [visibility, setVisibility] = useState(campaign.visibility);
+  const [model, setModel] = useState(campaign.model);
   const [saving, setSaving] = useState(false);
   const saveSettings = async () => {
     if (!name.trim() || saving) return;
@@ -76,7 +76,9 @@ export function CampaignSettingsPage({
           <label>
             Default visibility
             <select
-              onChange={(event) => setVisibility(event.target.value)}
+              onChange={(event) =>
+                setVisibility(event.target.value as CampaignSummary["visibility"])
+              }
               value={visibility}
             >
               <option value="private">Private</option>
@@ -86,7 +88,9 @@ export function CampaignSettingsPage({
           <label>
             Model profile
             <select
-              onChange={(event) => setModel(event.target.value)}
+              onChange={(event) =>
+                setModel(event.target.value as CampaignSummary["model"])
+              }
               value={model}
             >
               <option value="cheap">Cheap draft</option>

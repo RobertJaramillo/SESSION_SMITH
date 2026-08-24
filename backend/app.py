@@ -185,7 +185,7 @@ def _provider_for_request(request: Request):
         return _llm_provider
     if provider_name != "openai":
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail={"code": "unsupported_byok_provider", "message": "Only OpenAI session keys are supported in this beta."},
         )
     api_key = request.headers.get("X-Session-Smith-API-Key", "").strip()
@@ -666,6 +666,7 @@ def build_world(campaign_id: str, payload: WorldBuildCreate, background_tasks: B
     """Build (or rebuild) the world from the GM's entries + checked empty categories
     via the two-pass generator. Returns PENDING proposals for review; does NOT seal
     (that's the separate seal-world action). Repeatable while the world is draft."""
+    provider = _provider_for_request(request)
     with store.lock:
         campaign = _campaign_or_404(campaign_id)
         if campaign.get("worldStatus") == "sealed":

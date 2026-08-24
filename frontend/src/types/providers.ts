@@ -1,1 +1,1 @@
-export type AIProvider = 'demo' | 'openai';
+export type AIProvider = "demo" | "openai";

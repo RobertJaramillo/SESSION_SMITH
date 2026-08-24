@@ -14,6 +14,10 @@ export default function App() {
   const [provider, setProvider] = useState<AIProvider>("demo");
 
   const configureProvider = (nextProvider: AIProvider, apiKey = "") => {
+    if (!isAuthenticated) {
+      setProviderSetupOpen(false);
+      return;
+    }
     if (nextProvider === "openai") setSessionOpenAIKey(apiKey);
     else clearSessionAIProvider();
     setProvider(nextProvider);
@@ -23,6 +27,7 @@ export default function App() {
   const signOut = () => {
     clearSessionAIProvider();
     setProvider("demo");
+    setProviderSetupOpen(false);
     setIsAuthenticated(false);
   };
 

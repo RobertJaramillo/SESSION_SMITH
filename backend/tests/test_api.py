@@ -48,6 +48,16 @@ class ByokProviderTests(unittest.TestCase):
             campaign_api._provider_for_request(_request_with_headers({"X-Session-Smith-Provider": "gemini"}))
         self.assertEqual(raised.exception.status_code, 422)
 
+    def test_missing_or_overlong_byok_keys_are_rejected(self) -> None:
+        for api_key in ("", "x" * 501):
+            with self.subTest(api_key_length=len(api_key)):
+                with self.assertRaises(HTTPException) as raised:
+                    campaign_api._provider_for_request(_request_with_headers({
+                        "X-Session-Smith-Provider": "openai",
+                        "X-Session-Smith-API-Key": api_key,
+                    }))
+                self.assertEqual(raised.exception.status_code, 422)
+
 
 @unittest.skipIf(
     postgres_enabled(),

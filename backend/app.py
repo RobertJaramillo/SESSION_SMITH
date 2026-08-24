@@ -191,12 +191,12 @@ def _provider_for_request(request: Request):
     api_key = request.headers.get("X-Session-Smith-API-Key", "").strip()
     if not api_key:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail={"code": "missing_byok_key", "message": "An OpenAI API key is required for this session."},
         )
     if len(api_key) > 500:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail={"code": "invalid_byok_key", "message": "The API key is not valid."},
         )
     return get_provider("openai", api_key=api_key)

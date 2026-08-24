@@ -1,5 +1,6 @@
 import type { ApiProposal } from "../../api/types";
 import { worldCompleteness } from "../../domain/worldbuilding";
+import type { BuildFeedback } from "./buildFeedback";
 
 export function WorldBuildStatus({
   buildFeedback,
@@ -10,7 +11,7 @@ export function WorldBuildStatus({
   proposals,
   total,
 }: {
-  buildFeedback: string;
+  buildFeedback: BuildFeedback | null;
   buildProgress: { completed: string[]; total: number } | null;
   building: boolean;
   completeness: ReturnType<typeof worldCompleteness>;
@@ -86,9 +87,16 @@ export function WorldBuildStatus({
           </p>
         ))}
       {!building && buildFeedback && (
-        <p className="empty-state" role="status">
-          {buildFeedback}
-        </p>
+        <section
+          className={`build-feedback build-feedback-${buildFeedback.kind}`}
+          role={buildFeedback.kind === "error" ? "alert" : "status"}
+        >
+          <h3>{buildFeedback.title}</h3>
+          <p>{buildFeedback.message}</p>
+          {buildFeedback.kind === "error" && (
+            <p className="build-feedback-guidance">{buildFeedback.guidance}</p>
+          )}
+        </section>
       )}
     </article>
   );

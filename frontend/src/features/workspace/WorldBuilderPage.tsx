@@ -11,6 +11,7 @@ import {
   worldCompleteness,
 } from "../../domain/worldbuilding";
 import { WorldBuildStatus } from "./WorldBuildStatus";
+import type { BuildFeedback } from "./buildFeedback";
 import { WorldCategoryCarousel } from "./WorldCategoryCarousel";
 import { WorldCategoryNavigator } from "./WorldCategoryNavigator";
 import { InlineWorldReview, SealedWorldView } from "./WorldReviewViews";
@@ -40,7 +41,7 @@ export function WorldBuilderPage({
   proposals: ApiProposal[];
   onSave: (entry: Omit<ApiEntry, "id">) => void;
   building: boolean;
-  buildFeedback: string;
+  buildFeedback: BuildFeedback | null;
   buildProgress: { completed: string[]; total: number } | null;
   onBuildWorld: (categoryIds: string[]) => void;
   onSealWorld: () => void;

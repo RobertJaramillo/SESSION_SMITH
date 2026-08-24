@@ -511,6 +511,40 @@ label {
   line-height: 1.55;
   margin: 0.75rem 0 0;
 }
+
+.build-feedback {
+  border: 1px solid transparent;
+  border-radius: 14px;
+  margin-top: 1rem;
+  padding: 1rem;
+}
+
+.build-feedback h3,
+.build-feedback p {
+  margin: 0;
+}
+
+.build-feedback p {
+  line-height: 1.5;
+  margin-top: 0.35rem;
+}
+
+.build-feedback-success {
+  background: rgba(54, 179, 126, 0.12);
+  border-color: rgba(89, 210, 150, 0.32);
+  color: #d8f8e7;
+}
+
+.build-feedback-error {
+  background: rgba(224, 92, 92, 0.12);
+  border-color: rgba(244, 128, 128, 0.35);
+  color: #ffe0e0;
+}
+
+.build-feedback-guidance {
+  color: #ffcaca;
+  font-size: 0.94rem;
+}
 .campaign-tile {
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 24px;

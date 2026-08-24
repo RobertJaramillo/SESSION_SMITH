@@ -13,6 +13,10 @@ import { CanonBrowserPage as CampaignCanonBrowserPage } from "../features/worksp
 import { CampaignSettingsPage } from "../features/workspace/CampaignSettingsPage";
 import { WorldBuilderPage as CampaignWorldBuilderPage } from "../features/workspace/WorldBuilderPage";
 import {
+  describeBuildFailure,
+  type BuildFeedback,
+} from "../features/workspace/buildFeedback";
+import {
   WORLD_CATEGORIES,
   campaignWorkspaceNavItems,
   getCampaignWorkspace,
@@ -148,7 +152,9 @@ function CampaignWorkspaceView({
     campaign.worldStatus,
   );
   const [building, setBuilding] = useState(false);
-  const [buildFeedback, setBuildFeedback] = useState("");
+  const [buildFeedback, setBuildFeedback] = useState<BuildFeedback | null>(
+    null,
+  );
   // Categories the AI has confirmed so far, written incrementally by the
   // backend while the build job is still running (see pollJob's onUpdate).
   const [buildProgress, setBuildProgress] = useState<{
@@ -257,7 +263,7 @@ function CampaignWorkspaceView({
   const buildWorld = async (generateCategoryIds: string[]) => {
     if (building || worldStatus === "sealed") return;
     setBuilding(true);
-    setBuildFeedback("");
+    setBuildFeedback(null);
     setBuildProgress(null);
     try {
       const { jobId } = await submitBuildWorld(campaign.campaignId, {
@@ -282,18 +288,21 @@ function CampaignWorkspaceView({
       await refresh();
       if (job.status === "succeeded") {
         const count = job.result?.proposalIds?.length ?? 0;
-        setBuildFeedback(
-          count > 0
-            ? `World built — ${count} ${count === 1 ? "proposal is" : "proposals are"} ready to review below. Approve what you like, then Seal world. Not happy? Regenerate.`
-            : "World built, but no proposals were generated. Try adding an entry or checking a category.",
-        );
+        setBuildFeedback({
+          kind: "success",
+          title: "World build complete",
+          message:
+            count > 0
+              ? `${count} ${count === 1 ? "proposal is" : "proposals are"} ready to review. Approve what you like, then seal the world when you are happy.`
+              : "No proposals were generated. Try adding an entry or checking a category, then build again.",
+        });
       } else {
-        setBuildFeedback(
-          `Build failed: ${job.error ?? "the AI worker could not build the world"}.`,
-        );
+        setBuildFeedback(describeBuildFailure(job.error));
       }
-    } catch {
-      setBuildFeedback("Build failed — please try again.");
+    } catch (error) {
+      setBuildFeedback(
+        describeBuildFailure(error instanceof Error ? error.message : null),
+      );
     } finally {
       setBuilding(false);
     }
@@ -307,7 +316,12 @@ function CampaignWorkspaceView({
       await sealWorld(campaign.campaignId);
       await refresh();
     } catch {
-      setBuildFeedback("Could not seal the world — please try again.");
+      setBuildFeedback({
+        kind: "error",
+        title: "We could not seal this world",
+        message: "Your world remains editable and no data was locked.",
+        guidance: "Try again in a moment. If it keeps happening, check the API service logs.",
+      });
     } finally {
       setSealing(false);
     }

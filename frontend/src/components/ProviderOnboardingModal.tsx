@@ -1,0 +1,275 @@
+import { useState } from "react";
+import type { AIProvider } from "../types/providers";
+
+export function ProviderOnboardingModal({
+  onClose,
+  onConfigure,
+}: {
+  onClose: () => void;
+  onConfigure: (provider: AIProvider, apiKey?: string) => void;
+}) {
+  const [choice, setChoice] = useState<
+    "start" | "openai" | "gemini" | "hosted"
+  >("start");
+  const [apiKey, setApiKey] = useState("");
+  const [acknowledged, setAcknowledged] = useState(false);
+
+  return (
+    <div className="modal-backdrop" role="presentation">
+      <section
+        aria-labelledby="provider-onboarding-title"
+        aria-modal="true"
+        className="settings-modal provider-onboarding-modal"
+        role="dialog"
+      >
+        <div className="settings-modal-header">
+          <div>
+            <span className="eyebrow">AI setup</span>
+            <h2 id="provider-onboarding-title">
+              Choose how to power your campaign
+            </h2>
+          </div>
+          <button
+            aria-label="Close AI setup"
+            className="modal-close-button"
+            onClick={onClose}
+            type="button"
+          >
+            ×
+          </button>
+        </div>
+        {choice === "start" && (
+          <div className="provider-choice-list">
+            <section
+              className="provider-choice-section"
+              aria-labelledby="available-provider-options"
+            >
+              <div className="provider-section-header">
+                <span id="available-provider-options">Available now</span>
+                <p>Connect a key you already own to use live AI generation.</p>
+              </div>
+              <button
+                className="provider-choice provider-choice-openai provider-choice-primary"
+                onClick={() => setChoice("openai")}
+                type="button"
+              >
+                <span>Available now</span>
+                <strong>Use my OpenAI API key</strong>
+                <p>
+                  Live generation, billed by OpenAI. Your key stays in this
+                  browser session.
+                </p>
+              </button>
+            </section>
+            <section
+              className="provider-choice-section provider-choice-section-secondary"
+              aria-labelledby="future-provider-options"
+            >
+              <div className="provider-section-header">
+                <span id="future-provider-options">Coming next</span>
+              </div>
+              <button
+                className="provider-choice provider-choice-compact"
+                onClick={() => setChoice("gemini")}
+                type="button"
+              >
+                <span>Gemini free tier</span>
+                <strong>Read the setup guide</strong>
+                <p>
+                  Prepare a Gemini key now; Session Smith support is coming
+                  next.
+                </p>
+              </button>
+              <button
+                className="provider-choice provider-choice-hosted"
+                onClick={() => setChoice("hosted")}
+                type="button"
+              >
+                <span className="provider-choice-status">Coming soon</span>
+                <strong>Session Smith Hosted AI · $5/month</strong>
+                <p>
+                  Not purchasable yet. We’ll launch it with clear included
+                  usage, billing, and account controls.
+                </p>
+              </button>
+            </section>
+          </div>
+        )}
+        {choice === "openai" && (
+          <div className="setting-update-body provider-detail">
+            <button
+              className="link-button back-button"
+              onClick={() => setChoice("start")}
+              type="button"
+            >
+              ← All options
+            </button>
+            <h3>Connect OpenAI for this session</h3>
+            <ol>
+              <li>
+                <a
+                  href="https://platform.openai.com/api-keys"
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  Create an OpenAI API key
+                </a>{" "}
+                in your OpenAI project.
+              </li>
+              <li>
+                Set a project budget and usage limits before using the key here.
+              </li>
+              <li>
+                Paste the key below. It is sent to Session Smith only when an AI
+                job runs.
+              </li>
+            </ol>
+            <aside className="provider-budget-note">
+              <strong>Suggested starting limit: $5/month</strong>
+              <p>
+                Create a dedicated OpenAI project, set a hard monthly spend
+                limit and an alert, then increase it only after you understand
+                your campaign’s usage.
+              </p>
+            </aside>
+            <details className="provider-key-guide">
+              <summary>Need help getting your API key?</summary>
+              <ol>
+                <li>
+                  Open the OpenAI API platform and sign in or create an account.
+                </li>
+                <li>
+                  Create a dedicated project for Session Smith, then add billing
+                  or credits to that project.
+                </li>
+                <li>
+                  Set the $5 monthly spending limit and alert for the project.
+                </li>
+                <li>
+                  On the API keys page, create a new secret key, copy it once,
+                  and paste it below. Do not share it with anyone else.
+                </li>
+              </ol>
+              <a
+                href="https://platform.openai.com/api-keys"
+                rel="noreferrer"
+                target="_blank"
+              >
+                Open the OpenAI API keys page →
+              </a>
+            </details>
+            <label>
+              OpenAI API key
+              <input
+                autoComplete="off"
+                onChange={(event) => setApiKey(event.target.value)}
+                placeholder="Paste your key"
+                spellCheck="false"
+                type="password"
+                value={apiKey}
+              />
+            </label>
+            <label className="checkbox-label provider-acknowledgement">
+              <input
+                checked={acknowledged}
+                onChange={(event) => setAcknowledged(event.target.checked)}
+                type="checkbox"
+              />
+              <span>
+                I understand this key is used only for this browser session and
+                will be cleared on refresh or log out.
+              </span>
+            </label>
+            <p className="provider-security-note">
+              Session Smith does not save this key to browser storage, its
+              database, URLs, or job history. Use this beta flow only over HTTPS
+              in production.
+            </p>
+            <div className="settings-confirm-actions">
+              <button className="secondary" onClick={onClose} type="button">
+                Not now
+              </button>
+              <button
+                disabled={!acknowledged || apiKey.trim().length < 8}
+                onClick={() => onConfigure("openai", apiKey)}
+                type="button"
+              >
+                Use OpenAI this session
+              </button>
+            </div>
+          </div>
+        )}
+        {choice === "gemini" && (
+          <div className="setting-update-body provider-detail">
+            <button
+              className="link-button back-button"
+              onClick={() => setChoice("start")}
+              type="button"
+            >
+              ← All options
+            </button>
+            <h3>Try Gemini without committing to a paid plan</h3>
+            <ol>
+              <li>
+                <a
+                  href="https://aistudio.google.com/app/apikey"
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  Create a Gemini API key in Google AI Studio
+                </a>
+                .
+              </li>
+              <li>
+                Choose a model with a free-tier allowance and check its current
+                rate limits before using it.
+              </li>
+              <li>
+                Do not paste a Gemini key into Session Smith yet—the Gemini
+                adapter has not been implemented.
+              </li>
+            </ol>
+            <p className="provider-security-note">
+              Google's eligible-new-customer Cloud trial is separate: it
+              currently offers $300 in credits for 90 days. The Gemini Developer
+              API also has free-tier options with limits and distinct data-use
+              terms.
+            </p>
+            <div className="settings-confirm-actions">
+              <button onClick={onClose} type="button">
+                Close setup
+              </button>
+            </div>
+          </div>
+        )}
+        {choice === "hosted" && (
+          <div className="setting-update-body provider-detail">
+            <button
+              className="link-button back-button"
+              onClick={() => setChoice("start")}
+              type="button"
+            >
+              ← All options
+            </button>
+            <h3>Hosted AI is not available yet</h3>
+            <p>
+              A $5/month plan can work as a convenience subscription, but it
+              should not promise unlimited AI. Before launch, it needs real
+              accounts, encrypted provider credentials, payment handling, and a
+              clear monthly request or token allowance.
+            </p>
+            <p className="provider-security-note">
+              For the beta, connect your own OpenAI key. Your provider bill
+              stays with your provider.
+            </p>
+            <div className="settings-confirm-actions">
+              <button onClick={onClose} type="button">
+                Close setup
+              </button>
+            </div>
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}

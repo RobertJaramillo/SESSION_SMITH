@@ -130,6 +130,10 @@ OPENAI_API_KEY=your_api_key_here
 The `./run` helper can configure both values interactively. Do not commit `.env`
 or API keys.
 
+For the in-app private-beta experience, see [BYOK onboarding](docs/BYOK_ONBOARDING.md).
+It explains the session-only OpenAI key flow, Gemini's current status, and why a
+future hosted-AI subscription needs hard usage limits.
+
 ## Repository guide
 
 | Path | Purpose |

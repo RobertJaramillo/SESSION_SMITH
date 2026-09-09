@@ -171,6 +171,43 @@ def data(value: Any, response_status: int = status.HTTP_200_OK) -> Any:
     return JSONResponse(status_code=response_status, content={"data": value})
 
 
+def _provider_for_request(request: Request, model_profile: str = "balanced"):
+    """Select the configured provider or a browser-session BYOK provider.
+
+    A user-supplied key is intentionally accepted only through request headers:
+    it is never placed in a URL, job record, database row, or response. The
+    browser client holds it in memory only and the provider object lives only
+    until the background job completes. This is a private-beta bridge, *not* a
+    substitute for authenticated, encrypted per-user key storage.
+    """
+    provider_name = request.headers.get("X-Session-Smith-Provider")
+    if not provider_name:
+        if getattr(_llm_provider, "name", None) == "openai":
+            return get_provider(
+                "openai",
+                api_key=_llm_provider.api_key,
+                model_profile=model_profile,
+            )
+        return _llm_provider
+    if provider_name != "openai":
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={"code": "unsupported_byok_provider", "message": "Only OpenAI session keys are supported in this beta."},
+        )
+    api_key = request.headers.get("X-Session-Smith-API-Key", "").strip()
+    if not api_key:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={"code": "missing_byok_key", "message": "An OpenAI API key is required for this session."},
+        )
+    if len(api_key) > 500:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={"code": "invalid_byok_key", "message": "The API key is not valid."},
+        )
+    return get_provider("openai", api_key=api_key, model_profile=model_profile)
+
+
 def _campaign_or_404(campaign_id: str) -> dict[str, Any]:
     campaign = campaigns.get(campaign_id)
     if not campaign:
@@ -392,12 +429,12 @@ def _proposal_from_notes(content: str, source: str) -> list[dict[str, Any]]:
     ]
 
 
-def _complete_extraction(job_id: str, campaign_id: str, payload: NotesCreate, note_id: str | None = None, session_id: str | None = None) -> None:
+def _complete_extraction(job_id: str, campaign_id: str, payload: NotesCreate, provider: Any, note_id: str | None = None, session_id: str | None = None) -> None:
     source = f"Session {payload.sessionNumber}" + (f" — {payload.title.strip()}" if payload.title.strip() else "")
     if postgres_enabled():
         job = AIJob(id=job_id, campaign_id=campaign_id, session_id=session_id, job_type=JobType.extract_memory)
         try:
-            created = worker.extract_memory(job, note_id or "", payload.content, _llm_provider)
+            created = worker.extract_memory(job, note_id or "", payload.content, provider)
         except Exception as error:
             jobs.fail(job_id, str(error))
             return
@@ -414,9 +451,10 @@ def _complete_extraction(job_id: str, campaign_id: str, payload: NotesCreate, no
 
 
 @app.post("/v1/campaigns/{campaign_id}/notes")
-def submit_notes(campaign_id: str, payload: NotesCreate, background_tasks: BackgroundTasks) -> Any:
+def submit_notes(campaign_id: str, payload: NotesCreate, background_tasks: BackgroundTasks, request: Request) -> Any:
     with store.lock:
-        _campaign_or_404(campaign_id)
+        campaign = _campaign_or_404(campaign_id)
+        provider = _provider_for_request(request, campaign.get("model", "balanced"))
         if postgres_enabled():
             try:
                 note_id, session_id = sessions.create_note(
@@ -426,7 +464,7 @@ def submit_notes(campaign_id: str, payload: NotesCreate, background_tasks: Backg
                 raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail={"code": "invalid_session_number", "message": str(error)}) from error
             job_id = jobs.create(campaign_id, job_type="extract_memory", session_id=session_id)
             if payload.startExtraction:
-                background_tasks.add_task(_complete_extraction, job_id, campaign_id, payload, note_id, session_id)
+                background_tasks.add_task(_complete_extraction, job_id, campaign_id, payload, provider, note_id, session_id)
             return data({"noteId": note_id, "jobId": job_id, "status": "pending"}, status.HTTP_202_ACCEPTED)
         store.ensure_state(campaign_id)
         note_id, job_id = _id("note"), _id("job")
@@ -440,7 +478,7 @@ def submit_notes(campaign_id: str, payload: NotesCreate, background_tasks: Backg
             "createdAt": datetime.now(timezone.utc).isoformat(),
         }
     if payload.startExtraction:
-        background_tasks.add_task(_complete_extraction, job_id, campaign_id, payload)
+        background_tasks.add_task(_complete_extraction, job_id, campaign_id, payload, provider)
     return data({"noteId": note_id, "jobId": job_id, "status": "pending"}, status.HTTP_202_ACCEPTED)
 
 
@@ -456,7 +494,7 @@ def _outline_from_prep(sections: SessionPrepOutput) -> list[str]:
     return lines or [sections.summary]
 
 
-def _complete_prep(job_id: str, campaign_id: str, payload: PrepJobCreate) -> None:
+def _complete_prep(job_id: str, campaign_id: str, payload: PrepJobCreate, provider: Any) -> None:
     if postgres_enabled():
         job = AIJob(id=job_id, campaign_id=campaign_id, job_type=JobType.generate_session_prep)
         focus = payload.goal.strip() or None
@@ -464,7 +502,7 @@ def _complete_prep(job_id: str, campaign_id: str, payload: PrepJobCreate) -> Non
             focus = f"{focus} (tone: {payload.tone.strip()})"
         manual_memories = payload.memories.strip() or None
         try:
-            prep = worker.generate_session_prep(job, focus, _llm_provider, manual_memories=manual_memories)
+            prep = worker.generate_session_prep(job, focus, provider, manual_memories=manual_memories)
         except Exception as error:
             jobs.fail(job_id, str(error))
             return
@@ -484,12 +522,13 @@ def _complete_prep(job_id: str, campaign_id: str, payload: PrepJobCreate) -> Non
 
 
 @app.post("/v1/campaigns/{campaign_id}/prep-jobs")
-def submit_prep_job(campaign_id: str, payload: PrepJobCreate, background_tasks: BackgroundTasks) -> Any:
+def submit_prep_job(campaign_id: str, payload: PrepJobCreate, background_tasks: BackgroundTasks, request: Request) -> Any:
     with store.lock:
-        _campaign_or_404(campaign_id)
+        campaign = _campaign_or_404(campaign_id)
+        provider = _provider_for_request(request, campaign.get("model", "balanced"))
         if postgres_enabled():
             job_id = jobs.create(campaign_id, job_type="generate_session_prep")
-            background_tasks.add_task(_complete_prep, job_id, campaign_id, payload)
+            background_tasks.add_task(_complete_prep, job_id, campaign_id, payload, provider)
             return data({"jobId": job_id, "status": "pending"}, status.HTTP_202_ACCEPTED)
         store.ensure_state(campaign_id)
         job_id = _id("job")
@@ -498,7 +537,7 @@ def submit_prep_job(campaign_id: str, payload: PrepJobCreate, background_tasks: 
             "error": None, "campaignId": campaign_id, "sessionNumber": None,
             "createdAt": datetime.now(timezone.utc).isoformat(),
         }
-    background_tasks.add_task(_complete_prep, job_id, campaign_id, payload)
+    background_tasks.add_task(_complete_prep, job_id, campaign_id, payload, provider)
     return data({"jobId": job_id, "status": "pending"}, status.HTTP_202_ACCEPTED)
 
 
@@ -585,7 +624,7 @@ def _inmemory_build_proposals(campaign_name: str, entries_note: str, expand_labe
     return proposals
 
 
-def _complete_build_world(job_id: str, campaign_id: str, expand_labels: list[str], entries_note: str, campaign_name: str) -> None:
+def _complete_build_world(job_id: str, campaign_id: str, expand_labels: list[str], entries_note: str, campaign_name: str, provider: Any) -> None:
     """The world build: two-pass (bible -> grounded expansion) into PENDING
     proposals. Does NOT seal — sealing is a separate GM action after review.
     Regenerate-safe: prior pending proposals are cleared first so rebuilds replace
@@ -599,7 +638,7 @@ def _complete_build_world(job_id: str, campaign_id: str, expand_labels: list[str
             def on_progress(completed: list[str], _total: int) -> None:
                 jobs.update_progress(job_id, {"categoriesCompleted": completed, "totalCategories": total})
 
-            created = worker.build_world(job, entries_note, expand_labels, _llm_provider, on_progress=on_progress)
+            created = worker.build_world(job, entries_note, expand_labels, provider, on_progress=on_progress)
         except Exception as error:
             jobs.fail(job_id, str(error))
             return
@@ -629,12 +668,13 @@ def _complete_build_world(job_id: str, campaign_id: str, expand_labels: list[str
 
 
 @app.post("/v1/campaigns/{campaign_id}/build-world")
-def build_world(campaign_id: str, payload: WorldBuildCreate, background_tasks: BackgroundTasks) -> Any:
+def build_world(campaign_id: str, payload: WorldBuildCreate, background_tasks: BackgroundTasks, request: Request) -> Any:
     """Build (or rebuild) the world from the GM's entries + checked empty categories
     via the two-pass generator. Returns PENDING proposals for review; does NOT seal
     (that's the separate seal-world action). Repeatable while the world is draft."""
     with store.lock:
         campaign = _campaign_or_404(campaign_id)
+        provider = _provider_for_request(request, campaign.get("model", "balanced"))
         if campaign.get("worldStatus") == "sealed":
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -656,7 +696,7 @@ def build_world(campaign_id: str, payload: WorldBuildCreate, background_tasks: B
                 "error": None, "campaignId": campaign_id, "sessionNumber": 0,
                 "createdAt": datetime.now(timezone.utc).isoformat(),
             }
-    background_tasks.add_task(_complete_build_world, job_id, campaign_id, expand_labels, entries_note, campaign["name"])
+    background_tasks.add_task(_complete_build_world, job_id, campaign_id, expand_labels, entries_note, campaign["name"], provider)
     return data({"jobId": job_id, "status": "pending"}, status.HTTP_202_ACCEPTED)
 
 

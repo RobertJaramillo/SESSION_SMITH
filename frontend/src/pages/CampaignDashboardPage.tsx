@@ -121,7 +121,7 @@ export function CampaignDashboardPage({
             <span className="eyebrow">Signed in as</span>
             <h2 className="account-name">{accountName}</h2>
           </div>
-          <button type="button" className="secondary" aria-expanded={socialOpen} onClick={() => setSocialOpen(!socialOpen)}>Friends & invitations</button>
+          <button type="button" className={`dashboard-friends-button${socialOpen ? " is-active" : ""}`} aria-expanded={socialOpen} onClick={() => setSocialOpen(!socialOpen)}>Friends & invitations</button>
           <button
             className="create-campaign-button"
             onClick={() => setCreateOpen(true)}
@@ -183,7 +183,7 @@ export function CampaignDashboardPage({
                     </div>
                   </div>
                   <p>{campaign.description}</p>
-                  <p className="campaign-ownership">Owner: {campaign.owner?.name ?? "Unknown"} · Your role: {campaign.role}</p>
+                  <div className="campaign-ownership"><span>Owned by <strong>{campaign.owner?.name ?? (campaign.role === "owner" ? "you" : "Campaign owner")}</strong></span><span className={`social-role social-role-${campaign.role}`}>{campaign.role}</span></div>
                   <div className="campaign-tile-meta">
                     <span>Session {campaign.lastSessionNumber}</span>
                     <span>{campaign.nextSessionLabel}</span>

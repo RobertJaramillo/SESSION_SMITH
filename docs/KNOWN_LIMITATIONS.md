@@ -18,8 +18,10 @@ configured to, and nothing is configured to.
   All retrieval today goes through `KeywordRetriever` (lexical/TF-based). The `get_retriever()`
   call site hardcodes `"keyword"`; the `RAG_RETRIEVER` env var mentioned in a docstring is
   **not actually read anywhere** — it's aspirational documentation, not a real config knob.
-- **Authentication** — sign-in is a mocked client-side gate (any submit authenticates). No real
-  session/auth layer exists yet (see `CLAUDE.md`).
+- **Accounts and sharing** — email/password accounts, server-side sessions, friends,
+  campaign ownership and invitations are implemented. Email verification, forgotten-password
+  recovery, OAuth, and email delivery are not implemented. Player/viewer access currently
+  includes approved canon only. See [accounts and sharing](ACCOUNTS_AND_SHARING.md).
 - **`world_frameworks` / `characters` / `factions` / `locations` / `story_threads` tables** — no API
   endpoint writes to any of them. World-building only ever produces `world_entries` and
   `canon_events`. The RAG corpus still queries all five (in case a future writer lands), so they're

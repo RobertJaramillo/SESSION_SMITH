@@ -201,6 +201,7 @@ export type CampaignSummary = {
   campaignId: string;
   name: string;
   role: "owner" | "gm" | "player" | "viewer";
+  owner?: { id: string; name: string; email: string };
   status: "active" | "planning" | "paused";
   lastSessionNumber: number;
   nextSessionLabel: string;

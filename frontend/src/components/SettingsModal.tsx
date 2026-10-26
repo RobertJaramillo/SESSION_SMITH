@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { updateAccount, type Account } from "../api/client";
 import type { AIProvider } from "../types/providers";
 
 type EditableSettingId = "name" | "email" | "password";
@@ -18,6 +19,7 @@ export function SettingsModal({
   onClose,
   provider,
   onManageProvider,
+  onAccountUpdated,
 }: {
   accountEmail: string;
   accountName: string;
@@ -25,6 +27,7 @@ export function SettingsModal({
   onClose: () => void;
   provider: AIProvider;
   onManageProvider: () => void;
+  onAccountUpdated: (account: Account) => void;
 }) {
   const [settingValues, setSettingValues] = useState<
     Record<EditableSettingId, string>
@@ -65,7 +68,9 @@ export function SettingsModal({
       inputType: "password",
     },
   ];
-  const saveSetting = (settingId: EditableSettingId, value: string) => {
+  const saveSetting = async (settingId: EditableSettingId, value: string, currentPassword: string) => {
+    const account = await updateAccount({ [settingId]: value, currentPassword });
+    onAccountUpdated(account);
     setSettingValues((current) => ({
       ...current,
       [settingId]: settingId === "password" ? "Password updated" : value,
@@ -148,8 +153,8 @@ export function SettingsModal({
           inputType={editingSetting.inputType ?? "text"}
           label={editingSetting.label}
           onClose={() => setEditingSetting(null)}
-          onSave={(value) =>
-            saveSetting(editingSetting.id as EditableSettingId, value)
+          onSave={(value, currentPassword) =>
+            saveSetting(editingSetting.id as EditableSettingId, value, currentPassword)
           }
         />
       )}
@@ -168,8 +173,11 @@ function SettingUpdateModal({
   inputType: "text" | "email" | "password";
   label: string;
   onClose: () => void;
-  onSave: (value: string) => void;
+  onSave: (value: string, currentPassword: string) => Promise<void>;
 }) {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
   const [newValue, setNewValue] = useState("");
   const [confirmValue, setConfirmValue] = useState("");
   const valuesMatch =
@@ -203,6 +211,7 @@ function SettingUpdateModal({
               {inputType === "password" ? "Hidden for security" : currentValue}
             </strong>
           </p>
+          {inputType !== "text" && <label>Current password<input type="password" autoComplete="current-password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} /></label>}
           <label>
             New {label}
             <input
@@ -223,6 +232,8 @@ function SettingUpdateModal({
               value={confirmValue}
             />
           </label>
+          {error && <p role="alert">{error}</p>}
+          {inputType === "password" && <p>Use at least 12 characters.</p>}
           {!valuesMatch && (newValue.length > 0 || confirmValue.length > 0) && (
             <p className="settings-validation-message">
               Both fields must be filled in and match before Save is enabled.
@@ -231,8 +242,13 @@ function SettingUpdateModal({
         </div>
         <div className="settings-confirm-actions">
           <button
-            disabled={!valuesMatch}
-            onClick={() => onSave(newValue)}
+            disabled={!valuesMatch || busy || (inputType !== "text" && !currentPassword) || (inputType === "password" && newValue.length < 12)}
+            onClick={async () => {
+              setBusy(true); setError("");
+              try { await onSave(newValue,currentPassword); }
+              catch (error) { setError(error instanceof Error ? error.message : "Could not save account settings."); }
+              finally { setBusy(false); }
+            }}
             type="button"
           >
             Save

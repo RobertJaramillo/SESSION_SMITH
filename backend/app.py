@@ -22,6 +22,8 @@ from uuid import uuid4
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Query, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 import backend.worker as worker
+from backend.accounts import accounts, router as accounts_router
+from backend.access import AccountAccessMiddleware
 from backend.db import postgres_enabled
 from backend.llm_provider import get_provider
 from backend.models.requests import CampaignCreate, CampaignPatch, EntryCreate, NotesCreate, PrepJobCreate, ProposalReview, SessionPrepApprove, WorldBuildCreate
@@ -150,6 +152,8 @@ def _configure_llm_provider():
 
 _llm_provider = _configure_llm_provider()
 app = FastAPI(title="AI Campaign Orchestration API", version="0.1.0-dev")
+app.include_router(accounts_router)
+app.add_middleware(AccountAccessMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://127.0.0.1:5173", "http://localhost:5173"],
@@ -228,22 +232,38 @@ def readyz() -> dict[str, str]:
 
 
 @app.get("/v1/campaigns")
-def list_campaigns() -> Any:
+def list_campaigns(request: Request) -> Any:
+    user_id = request.state.user['id']
+    owned, shared = [], []
+    seen = set()
     with store.lock:
-        return data(campaigns.list_sections())
+        for section in campaigns.list_sections():
+            for campaign in section['campaigns']:
+                cid = campaign['campaignId']
+                role = accounts.role(cid,user_id)
+                if role and cid not in seen:
+                    seen.add(cid)
+                    (owned if role == 'owner' else shared).append(accounts.decorate(campaign,user_id))
+    return data([
+        {'id':'owned','title':'Owned','subtitle':'Campaigns you own and manage.','campaigns':owned},
+        {'id':'shared','title':'Shared','subtitle':'Campaigns you have joined.','campaigns':shared},
+    ])
 
 
 @app.post("/v1/campaigns")
-def create_campaign(payload: CampaignCreate) -> Any:
+def create_campaign(payload: CampaignCreate, request: Request) -> Any:
     with store.lock:
-        campaign = campaigns.create(name=payload.name.strip(), description=payload.description.strip())
-    return data(campaign, status.HTTP_201_CREATED)
+        campaign = campaigns.create(name=payload.name.strip(), description=payload.description.strip(), owner_id=request.state.user['id'])
+        if not postgres_enabled():
+            with accounts.transaction() as sql:
+                sql("INSERT INTO campaign_access(campaign_id,user_id,role) VALUES (%s,%s,'owner')", (campaign['campaignId'],request.state.user['id']))
+    return data(accounts.decorate(campaign,request.state.user['id']), status.HTTP_201_CREATED)
 
 
 @app.get("/v1/campaigns/{campaign_id}")
-def get_campaign(campaign_id: str) -> Any:
+def get_campaign(campaign_id: str, request: Request) -> Any:
     with store.lock:
-        return data(_campaign_or_404(campaign_id))
+        return data(accounts.decorate(_campaign_or_404(campaign_id),request.state.user["id"]))
 
 
 @app.patch("/v1/campaigns/{campaign_id}")

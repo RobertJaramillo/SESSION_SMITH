@@ -46,11 +46,14 @@ describe("routing", () => {
     ).toBeTruthy();
   });
 
-  it("signs in through an SSO provider", async () => {
+  it("signs in with account credentials", async () => {
     window.history.pushState({}, "", "/login");
     render(<App />);
 
-    fireEvent.click(await screen.findByRole("button", { name: /google/i }));
+    await screen.findByRole("button", { name: /^sign in$/i });
+    fireEvent.change(screen.getByLabelText(/email address/i), { target: { value: "gm@example.com" } });
+    fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: "long-demo-password" } });
+    fireEvent.click(screen.getByRole("button", { name: /^sign in$/i }));
 
     expect(
       await screen.findByRole("heading", { name: /drowkiroth/i }),

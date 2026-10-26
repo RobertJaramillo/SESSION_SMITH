@@ -48,10 +48,12 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
   const response = await fetch(`${apiBase}${path}`, {
     ...init,
+    credentials: "include",
     headers,
   });
   if (!response.ok) {
-    throw new Error(`Request to ${path} failed with ${response.status}`);
+    const failure = await response.json().catch(() => null);
+    throw new Error(failure?.error?.message ?? "The request could not be completed.");
   }
   const body = await response.json();
   return body.data as T;
@@ -210,3 +212,22 @@ export async function pollJob(
   }
   throw new Error("Job polling timed out");
 }
+
+export type Account = { id: string; name: string; email: string };
+export type Friendship = { id: string; user: Account; status: "pending" | "accepted"; incoming: boolean };
+export type CampaignInvitation = { id: string; campaignName: string; sender_name: string; role: string };
+export type CampaignMembers = { members: (Account & { role: string })[]; invitations: { id: string; email: string; role: string }[] };
+export const getAccount = () => request<Account>("/v1/auth/me");
+export const authenticate = (register: boolean, input: { email: string; password: string; name?: string }) => request<Account>(`/v1/auth/${register ? "register" : "login"}`, { method: "POST", body: JSON.stringify(input) });
+export const logout = () => request<null>("/v1/auth/logout", { method: "POST", body: "{}" });
+export const listFriends = () => request<Friendship[]>("/v1/friends");
+export const addFriend = (email: string) => request("/v1/friends", { method: "POST", body: JSON.stringify({ email }) });
+export const acceptFriend = (id: string) => request(`/v1/friends/${id}/accept`, { method: "POST", body: "{}" });
+export const removeFriend = (id: string) => request(`/v1/friends/${id}`, { method: "DELETE" });
+export const listInvitations = () => request<CampaignInvitation[]>("/v1/invitations");
+export const acceptInvitation = (id: string) => request(`/v1/invitations/${id}/accept`, { method: "POST", body: "{}" });
+export const declineInvitation = (id: string) => request(`/v1/invitations/${id}`, { method: "DELETE" });
+export const getMembers = (id: string) => request<CampaignMembers>(`/v1/campaigns/${id}/members`);
+export const inviteToCampaign = (id: string, email: string, role: string) => request(`/v1/campaigns/${id}/invitations`, { method: "POST", body: JSON.stringify({ email, role }) });
+export const removeCampaignMember = (id: string, memberId: string) => request(`/v1/campaigns/${id}/members/${memberId}`, { method: "DELETE" });
+export const updateAccount = (patch: { name?: string; email?: string; password?: string; currentPassword?: string }) => request<Account>("/v1/auth/me", { method: "PATCH", body: JSON.stringify(patch) });

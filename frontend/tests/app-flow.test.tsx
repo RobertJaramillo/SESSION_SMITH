@@ -16,15 +16,18 @@ describe("app entry flow", () => {
     render(<App />);
 
     expect(
-      screen.getByRole("heading", { name: /your living campaign memory/i }),
+      await screen.findByRole("heading", { name: /your living campaign memory/i }),
     ).toBeTruthy();
     expect(
       screen.getByRole("heading", { name: /log in to your campaigns/i }),
     ).toBeTruthy();
 
+    await screen.findByRole("button", { name: /^sign in$/i });
+    fireEvent.change(screen.getByLabelText(/email address/i), { target: { value: "gm@example.com" } });
+    fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: "long-demo-password" } });
     fireEvent.click(screen.getByRole("button", { name: /^sign in$/i }));
 
-    expect(screen.getByRole("heading", { name: /drowkiroth/i })).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: /drowkiroth/i })).toBeTruthy();
     // Campaign columns load from the API (MSW), so wait for them.
     expect(
       await screen.findByRole("heading", { name: /^owned$/i }),
@@ -36,9 +39,12 @@ describe("app entry flow", () => {
   it("offers a memory-only OpenAI setup after sign in", async () => {
     render(<App />);
 
+    await screen.findByRole("button", { name: /^sign in$/i });
+    fireEvent.change(screen.getByLabelText(/email address/i), { target: { value: "gm@example.com" } });
+    fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: "long-demo-password" } });
     fireEvent.click(screen.getByRole("button", { name: /^sign in$/i }));
     expect(
-      screen.getByRole("dialog", {
+      await screen.findByRole("dialog", {
         name: /choose how to power your campaign/i,
       }),
     ).toBeTruthy();
@@ -79,31 +85,31 @@ describe("app entry flow", () => {
     ).toBeNull();
   });
 
-  it("can open directly to the dashboard for page review", () => {
+  it("can open directly to the dashboard for a restored session", async () => {
     window.history.pushState({}, "", "/?preview=dashboard");
     render(<App />);
 
-    expect(screen.getByRole("heading", { name: /drowkiroth/i })).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: /drowkiroth/i })).toBeTruthy();
     expect(
       screen.queryByRole("heading", { name: /log in to your campaigns/i }),
     ).toBeNull();
   });
 
-  it("opens a profile menu with settings and log out", () => {
+  it("opens a profile menu with settings and log out", async () => {
     window.history.pushState({}, "", "/?preview=dashboard");
     render(<App />);
 
-    fireEvent.click(screen.getByRole("button", { name: /open profile menu/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /open profile menu/i }));
 
     expect(screen.getByRole("menuitem", { name: /settings/i })).toBeTruthy();
     expect(screen.getByRole("menuitem", { name: /log out/i })).toBeTruthy();
   });
 
-  it("opens an account settings modal with one update control for each editable option", () => {
+  it("opens an account settings modal with one update control for each editable option", async () => {
     window.history.pushState({}, "", "/?preview=dashboard");
     render(<App />);
 
-    fireEvent.click(screen.getByRole("button", { name: /open profile menu/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /open profile menu/i }));
     fireEvent.click(screen.getByRole("menuitem", { name: /settings/i }));
 
     expect(screen.getByRole("dialog", { name: /^settings$/i })).toBeTruthy();
@@ -119,11 +125,11 @@ describe("app entry flow", () => {
     expect(screen.getByText(/current plan/i)).toBeTruthy();
   });
 
-  it("requires matching update values before save is enabled", () => {
+  it("requires matching update values before save is enabled", async () => {
     window.history.pushState({}, "", "/?preview=dashboard");
     render(<App />);
 
-    fireEvent.click(screen.getByRole("button", { name: /open profile menu/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /open profile menu/i }));
     fireEvent.click(screen.getByRole("menuitem", { name: /settings/i }));
     fireEvent.click(screen.getAllByRole("button", { name: /^update$/i })[0]);
 
@@ -153,7 +159,7 @@ describe("app entry flow", () => {
     expect(saveButton.hasAttribute("disabled")).toBe(false);
 
     fireEvent.click(saveButton);
-    expect(screen.getByText("DrowGM")).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: "DrowGM" })).toBeTruthy();
     expect(
       screen.queryByRole("dialog", { name: /update user name/i }),
     ).toBeNull();

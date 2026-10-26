@@ -1387,3 +1387,9 @@ label {
     gap: 0.2rem;
   }
 }
+
+.friends-panel { margin-bottom: 1.5rem; }
+.social-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid var(--border, #ddd); flex-wrap: wrap; }
+.social-row p { margin: .3rem 0; }
+.campaign-ownership { font-size: .85rem; opacity: .8; }
+.friends-panel form { max-width: 40rem; margin-bottom: 1rem; }

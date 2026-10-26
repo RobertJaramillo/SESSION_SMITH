@@ -55,6 +55,7 @@ run_backend() {
   # under pytest — unittest silently discovers 0 tests there.
   "$PY" -m unittest \
     backend.tests.test_api \
+    backend.tests.test_accounts \
     backend.tests.test_schemas \
     backend.tests.test_exporting \
     backend.tests.test_migrations \

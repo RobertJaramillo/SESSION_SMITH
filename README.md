@@ -10,7 +10,8 @@ canon.** Raw notes, pending proposals, and approved canon are kept separate.
 
 ## What you can do
 
-- Create and organize campaigns in a GM-facing workspace.
+- Register, sign in, and organize campaigns with explicit ownership.
+- Add friends and invite players or viewers to your campaigns.
 - Build a world across 18 categories, then review and seal it.
 - Submit session notes and receive proposed canon updates.
 - Approve, edit, or reject proposals before they affect campaign memory.
@@ -82,12 +83,12 @@ live AI calls. Some PostgreSQL-backed backend tests self-skip unless
 
 ## Local development without the full stack
 
-For UI-only work, run the frontend with its default browser mocks:
+For UI-only work, explicitly enable browser mocks (these do not provide real accounts or sharing):
 
 ```bash
 cd frontend
 npm install
-npm run dev -- --port 5173
+VITE_USE_MOCKS=true npm run dev -- --port 5173
 ```
 
 For the FastAPI backend's in-memory development mode, use the virtual
@@ -115,6 +116,15 @@ requests to port 8000:
 cd frontend
 VITE_USE_MOCKS=false npm run dev -- --port 5173
 ```
+
+## Accounts and sharing
+
+Create an account from the sign-in page. Use **Friends & invitations** on the
+dashboard for friend requests and incoming campaign invitations. Campaign owners
+invite people and manage members in **Campaign Settings**. Invitations are delivered
+in-app, including to people who register later with the invited email; no invitation
+emails are sent. See [accounts and sharing](docs/ACCOUNTS_AND_SHARING.md) for roles,
+persistence, and migrating existing campaigns.
 
 ## AI providers
 

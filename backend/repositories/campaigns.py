@@ -15,7 +15,7 @@ class CampaignRepository(Protocol):
 
     def list_sections(self) -> list[dict[str, Any]]: ...
     def get(self, campaign_id: str) -> dict[str, Any] | None: ...
-    def create(self, *, name: str, description: str) -> dict[str, Any]: ...
+    def create(self, *, name: str, description: str, owner_id: str | None = None) -> dict[str, Any]: ...
     def update(self, campaign_id: str, patch: Mapping[str, str]) -> dict[str, Any] | None: ...
     def seal_world(self, campaign_id: str) -> dict[str, Any] | None: ...
     def is_ready(self) -> bool: ...
@@ -61,7 +61,7 @@ class InMemoryCampaignRepository:
         campaign = self.store.campaign(campaign_id)
         return _api_campaign_memory(campaign) if campaign else None
 
-    def create(self, *, name: str, description: str) -> dict[str, Any]:
+    def create(self, *, name: str, description: str, owner_id: str | None = None) -> dict[str, Any]:
         campaign = self.store._campaign(
             f"campaign_{uuid4().hex[:12]}", name, "owner", "planning", 0,
             "Initial world setup incomplete", description or "New campaign world awaiting its first session.",
@@ -131,7 +131,7 @@ class PostgresCampaignRepository:
             ).fetchone()
         return _api_campaign(row) if row else None
 
-    def create(self, *, name: str, description: str) -> dict[str, Any]:
+    def create(self, *, name: str, description: str, owner_id: str | None = None) -> dict[str, Any]:
         campaign_id = f"campaign_{uuid4().hex[:12]}"
         with connect() as connection:
             row = connection.execute(
@@ -146,6 +146,8 @@ class PostgresCampaignRepository:
                 """,
                 (campaign_id, name, description or "New campaign world awaiting its first session."),
             ).fetchone()
+            if owner_id:
+                connection.execute("INSERT INTO campaign_access(campaign_id,user_id,role) VALUES (%s,%s,'owner')", (campaign_id,owner_id))
         return _api_campaign(row)
 
     def update(self, campaign_id: str, patch: Mapping[str, str]) -> dict[str, Any] | None:

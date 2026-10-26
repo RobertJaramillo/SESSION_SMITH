@@ -1,7 +1,10 @@
 import { useState } from "react";
+import { authenticate, type Account } from "../api/client";
 
-export function LoginPage({ onSignIn }: { onSignIn: () => void }) {
+export function LoginPage({ onSignIn }: { onSignIn: (account: Account) => void }) {
   const [notice, setNotice] = useState("");
+  const [register, setRegister] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   return (
     <main className="login-page">
@@ -55,21 +58,29 @@ export function LoginPage({ onSignIn }: { onSignIn: () => void }) {
       <section className="login-card" aria-label="Sign in form">
         <div className="login-card-header">
           <span className="eyebrow">Welcome back</span>
-          <h2>Log in to your campaigns</h2>
+          <h2>{register ? "Create your account" : "Log in to your campaigns"}</h2>
           <p>Sign in to pick up your campaigns right where you left off.</p>
         </div>
 
         <form
-          onSubmit={(event) => {
+          onSubmit={async (event) => {
             event.preventDefault();
-            onSignIn();
+            if (busy) return;
+            const fields = new FormData(event.currentTarget);
+            setBusy(true);
+            setNotice("");
+            try {
+              onSignIn(await authenticate(register, { email: String(fields.get("email")), password: String(fields.get("password")), name: String(fields.get("name") ?? "") }));
+            } catch (error) { setNotice(error instanceof Error ? error.message : "Could not sign in."); }
+            finally { setBusy(false); }
           }}
         >
+          {register && <label>Display name<input name="name" required maxLength={80} autoComplete="nickname" /></label>}
           <label>
             Email address
             <input
               autoComplete="email"
-              defaultValue="gm@example.com"
+              name="email" required
               inputMode="email"
               placeholder="you@example.com"
               type="email"
@@ -79,61 +90,25 @@ export function LoginPage({ onSignIn }: { onSignIn: () => void }) {
             Password
             <input
               autoComplete="current-password"
-              defaultValue="campaign-memory"
+              name="password" required minLength={12} maxLength={256}
               placeholder="••••••••••••"
               type="password"
             />
           </label>
-          <div className="login-options-row">
-            <label className="checkbox-label">
-              <input defaultChecked type="checkbox" />
-              <span>Remember this device</span>
-            </label>
-            <button
-              className="link-button"
-              onClick={() =>
-                setNotice(
-                  "Password reset isn’t available in the private beta yet — reach out to your beta contact.",
-                )
-              }
-              type="button"
-            >
-              Forgot password?
-            </button>
-          </div>
-          <button className="login-submit" type="submit">
-            Sign in
+          {register && <p>Use a password with at least 12 characters.</p>}
+          <button className="login-submit" disabled={busy} type="submit">
+            {busy ? "Please wait…" : register ? "Create account" : "Sign in"}
           </button>
         </form>
 
-        <div className="sso-divider">
-          <span>or continue with</span>
-        </div>
-        <div className="sso-row">
-          <button className="secondary" onClick={onSignIn} type="button">
-            Google
-          </button>
-          <button className="secondary" onClick={onSignIn} type="button">
-            Discord
-          </button>
-        </div>
         {notice && (
           <p className="empty-state" role="status">
             {notice}
           </p>
         )}
         <p className="login-footnote">
-          New to Session Smith?{" "}
-          <button
-            className="link-button"
-            onClick={() =>
-              setNotice(
-                "Thanks for your interest — beta access is granted manually right now, so we’ll be in touch.",
-              )
-            }
-            type="button"
-          >
-            Request beta access
+          <button className="link-button" onClick={() => { setRegister(!register); setNotice(""); }} type="button">
+            {register ? "Already have an account? Sign in" : "New here? Create an account"}
           </button>
         </p>
       </section>

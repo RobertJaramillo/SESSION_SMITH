@@ -1,15 +1,19 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { LoginPage } from "./pages/LoginPage";
 import { ProviderOnboardingModal as ProviderOnboardingDialog } from "./components/ProviderOnboardingModal";
-import { clearSessionAIProvider, setSessionOpenAIKey } from "./api/client";
+import { clearSessionAIProvider, setSessionOpenAIKey, getAccount, logout, type Account } from "./api/client";
 import type { AIProvider } from "./types/providers";
 import { DashboardRoute, WorkspaceRoute } from "./routes/AppRoutes";
 
 export default function App() {
-  const startsOnDashboard =
-    new URLSearchParams(window.location.search).get("preview") === "dashboard";
-  const [isAuthenticated, setIsAuthenticated] = useState(startsOnDashboard);
+  const [account, setAccount] = useState<Account | null>(null);
+  const [checking, setChecking] = useState(true);
+  const isAuthenticated = account !== null;
+  useEffect(() => {
+    getAccount().then(setAccount).catch(() => setAccount(null)).finally(() => setChecking(false));
+  }, []);
+  const [signOutError, setSignOutError] = useState("");
   const [providerSetupOpen, setProviderSetupOpen] = useState(false);
   const [provider, setProvider] = useState<AIProvider>("demo");
 
@@ -24,15 +28,20 @@ export default function App() {
     setProviderSetupOpen(false);
   };
 
-  const signOut = () => {
+  const signOut = async () => {
+    setSignOutError("");
+    try { await logout(); } catch { setSignOutError("Could not sign out. Please try again."); return; }
     clearSessionAIProvider();
     setProvider("demo");
     setProviderSetupOpen(false);
-    setIsAuthenticated(false);
+    setAccount(null);
   };
+
+  if (checking) return <main className="page-panel"><p role="status">Checking your session…</p></main>;
 
   return (
     <BrowserRouter>
+      {signOutError && <p role="alert">{signOutError}</p>}
       <Routes>
         <Route
           path="/login"
@@ -41,8 +50,8 @@ export default function App() {
               <Navigate replace to="/campaigns" />
             ) : (
               <LoginPage
-                onSignIn={() => {
-                  setIsAuthenticated(true);
+                onSignIn={(user) => {
+                  setAccount(user);
                   setProviderSetupOpen(true);
                 }}
               />
@@ -54,6 +63,8 @@ export default function App() {
           element={
             isAuthenticated ? (
               <DashboardRoute
+                account={account!}
+                onAccountUpdated={setAccount}
                 onLogout={signOut}
                 provider={provider}
                 onManageProvider={() => setProviderSetupOpen(true)}

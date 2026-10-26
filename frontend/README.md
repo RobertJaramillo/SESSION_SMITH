@@ -32,7 +32,7 @@ npm run dev -- --port 5173
 ## Connect the development API
 
 The UI calls its `/v1` API client for all campaign, entry, prep, note, review,
-and canon interactions. MSW mocks are enabled by default for UI-only work.
+and canon interactions. The frontend uses the real API by default. Set `VITE_USE_MOCKS=true` for UI-only mock development; real accounts and sharing require FastAPI.
 
 To use the FastAPI development backend instead, start it from the repository
 root in one terminal:

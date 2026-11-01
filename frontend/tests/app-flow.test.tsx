@@ -1,7 +1,9 @@
 /** @vitest-environment jsdom */
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, beforeEach, afterEach } from 'vitest';
+import { http, HttpResponse } from 'msw';
 import App from '../src/App';
+import { server } from '../src/mocks/server';
 
 describe('app entry flow', () => {
   beforeEach(() => {
@@ -12,15 +14,23 @@ describe('app entry flow', () => {
     cleanup();
   });
 
-  it('starts on the login page and moves to the campaign dashboard after sign in', async () => {
+  it('starts on the login page with a working Google sign-in link', async () => {
     render(<App />);
 
+    expect(await screen.findByRole('heading', { name: /log in to your campaigns/i })).toBeTruthy();
     expect(screen.getByRole('heading', { name: /your living campaign memory/i })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: /log in to your campaigns/i })).toBeTruthy();
 
-    fireEvent.click(screen.getByRole('button', { name: /^sign in$/i }));
+    const googleLink = screen.getByRole('link', { name: /continue with google/i });
+    expect(googleLink.getAttribute('href')).toMatch(/\/auth\/google\/login$/);
+  });
 
-    expect(screen.getByRole('heading', { name: /drowkiroth/i })).toBeTruthy();
+  it('shows the campaign dashboard once /auth/me reports a signed-in session', async () => {
+    server.use(
+      http.get('*/auth/me', () => HttpResponse.json({ data: { email: 'drowkiroth@example.com', name: 'DrowKiroth' } })),
+    );
+    render(<App />);
+
+    expect(await screen.findByRole('heading', { name: /drowkiroth/i })).toBeTruthy();
     // Campaign columns load from the API (MSW), so wait for them.
     expect(await screen.findByRole('heading', { name: /^owned$/i })).toBeTruthy();
     expect(screen.getByRole('heading', { name: /in progress/i })).toBeTruthy();

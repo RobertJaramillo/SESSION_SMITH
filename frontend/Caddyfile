@@ -7,6 +7,11 @@
 		reverse_proxy api:8000
 	}
 
+	# Google OAuth login/callback + session endpoints (backend/auth.py).
+	handle /auth/* {
+		reverse_proxy api:8000
+	}
+
 	# Everything else is the SPA; unknown paths fall back to index.html.
 	handle {
 		root * /srv

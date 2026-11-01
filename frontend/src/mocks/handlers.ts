@@ -120,6 +120,10 @@ function ensureState(campaignId: string): CampaignState {
 }
 
 export const handlers = [
+  // No mock session by default — tests that need an authenticated App.tsx
+  // override this with server.use(...) (see frontend/tests/app-flow.test.tsx).
+  http.get('*/auth/me', () => HttpResponse.json({ error: { code: 'not_authenticated', message: 'Not signed in.' } }, { status: 401 })),
+
   http.get('*/v1/campaigns', () => HttpResponse.json({ data: ensureSections() })),
 
   http.post('*/v1/campaigns', async ({ request }) => {

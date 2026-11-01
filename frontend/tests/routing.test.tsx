@@ -32,13 +32,12 @@ describe('routing', () => {
     expect(await screen.findByRole('heading', { name: /at a glance/i })).toBeTruthy();
   });
 
-  it('signs in through an SSO provider', async () => {
+  it('renders a working Google sign-in link on the login route', async () => {
     window.history.pushState({}, '', '/login');
     render(<App />);
 
-    fireEvent.click(await screen.findByRole('button', { name: /google/i }));
-
-    expect(await screen.findByRole('heading', { name: /drowkiroth/i })).toBeTruthy();
+    const link = await screen.findByRole('link', { name: /continue with google/i });
+    expect(link.getAttribute('href')).toMatch(/\/auth\/google\/login$/);
   });
 
   it('creates a campaign and opens its workspace', async () => {

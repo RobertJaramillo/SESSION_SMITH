@@ -21,7 +21,11 @@ from uuid import uuid4
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Query, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware import Middleware
+from starlette.middleware.sessions import SessionMiddleware
 import backend.worker as worker
+from backend.auth import SESSION_SECRET, AuthGateMiddleware
+from backend.auth import router as auth_router
 from backend.db import postgres_enabled
 from backend.llm_provider import get_provider
 from backend.models.requests import CampaignCreate, CampaignPatch, EntryCreate, NotesCreate, PrepJobCreate, ProposalReview, SessionPrepApprove, WorldBuildCreate
@@ -149,14 +153,26 @@ def _configure_llm_provider():
 
 
 _llm_provider = _configure_llm_provider()
-app = FastAPI(title="AI Campaign Orchestration API", version="0.1.0-dev")
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://127.0.0.1:5173", "http://localhost:5173"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+app = FastAPI(
+    title="AI Campaign Orchestration API",
+    version="0.1.0-dev",
+    # Order matters: outermost first. CORS wraps everything (including the
+    # 401s AuthGateMiddleware short-circuits with) so the browser can read
+    # them; SessionMiddleware must run before AuthGateMiddleware reads
+    # request.session.
+    middleware=[
+        Middleware(
+            CORSMiddleware,
+            allow_origins=["http://127.0.0.1:5173", "http://localhost:5173"],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        ),
+        Middleware(SessionMiddleware, secret_key=SESSION_SECRET, same_site="lax"),
+        Middleware(AuthGateMiddleware),
+    ],
 )
+app.include_router(auth_router)
 
 
 @app.exception_handler(HTTPException)

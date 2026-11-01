@@ -130,6 +130,39 @@ OPENAI_API_KEY=your_api_key_here
 The `./run` helper can configure both values interactively. Do not commit `.env`
 or API keys.
 
+## Google Sign-In
+
+By default the app has no login gate (matches the single-tenant prototype
+described in `docs/DATA_MODEL.md`). Setting `GOOGLE_CLIENT_ID` and
+`GOOGLE_CLIENT_SECRET` turns on real Google OAuth: `/login` gets a working
+"Continue with Google" link, `backend/auth.py` issues a signed session
+cookie, and every `/v1/*` request then requires that session. There is still
+no per-user data — everyone who signs in shares the one workspace.
+
+1. In [Google Cloud Console](https://console.cloud.google.com/apis/credentials),
+   create (or pick) a project, then **Create credentials → OAuth client ID**.
+2. If prompted, configure the **OAuth consent screen** first (External is fine
+   for testing; add yourself as a test user while the app is unpublished).
+3. Application type: **Web application**. Under **Authorized redirect URIs**
+   add both of these (register both — one per way you run the app locally):
+   - `http://localhost:5173/auth/google/callback` — manual dev (`npm run dev`
+     + `uvicorn`, per "Local development without the full stack" above)
+   - `http://localhost:8080/auth/google/callback` — `./run` / Docker Compose
+4. Copy the generated **Client ID** and **Client secret** into `.env`:
+
+   ```dotenv
+   GOOGLE_CLIENT_ID=your_client_id.apps.googleusercontent.com
+   GOOGLE_CLIENT_SECRET=your_client_secret
+   SESSION_SECRET=some_long_random_string
+   ```
+
+   `SESSION_SECRET` signs the session cookie — generate one with
+   `openssl rand -hex 32`. If you leave it unset the app still works, but a
+   restart invalidates every signed-in session.
+5. Restart the stack (`./run`, or restart `uvicorn` for manual dev). Signing
+   in with a Google account that isn't an approved test user (while the
+   consent screen is unpublished) will be rejected by Google, not by this app.
+
 ## Repository guide
 
 | Path | Purpose |

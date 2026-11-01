@@ -5,6 +5,8 @@ import type { CampaignActivity, WorldCategoryId } from '../domain/worldbuilding'
 
 export type ReviewAction = 'approve' | 'edit_approve' | 'reject';
 
+export type CurrentUser = { email: string; name: string; picture?: string | null };
+
 export type ApiProposal = {
   id: string;
   title: string;

@@ -15,10 +15,13 @@ import {
   createEntry,
   getCampaign,
   getCampaignSections,
+  getCurrentUser,
   getWorkspaceSummary,
+  googleLoginUrl,
   listCanonEvents,
   listEntries,
   listPendingProposals,
+  logout as apiLogout,
   pollJob,
   reviewProposal as apiReviewProposal,
   sealWorld,
@@ -28,27 +31,46 @@ import {
   updateCampaign,
   worldExportUrl,
 } from './api/client';
-import type { ApiCanonEvent, ApiEntry, ApiProposal, ApiWorkspaceSummary, ReviewAction } from './api/types';
+import type { ApiCanonEvent, ApiEntry, ApiProposal, ApiWorkspaceSummary, CurrentUser, ReviewAction } from './api/types';
 
 type PrepState = { goal: string; tone: string; memories: string; outline: string };
 type NoteSubmission = { note: string; sessionNumber: string; title: string };
 
 const WORKSPACE_PAGES = campaignWorkspaceNavItems.map((item) => item.page) as string[];
 
+const PREVIEW_USER: CurrentUser = { email: 'drowkiroth@example.com', name: 'DrowKiroth' };
+
 export default function App() {
   const startsOnDashboard = new URLSearchParams(window.location.search).get('preview') === 'dashboard';
-  const [isAuthenticated, setIsAuthenticated] = useState(startsOnDashboard);
+  const [authState, setAuthState] = useState<'loading' | 'authed' | 'anon'>(startsOnDashboard ? 'authed' : 'loading');
+  const [user, setUser] = useState<CurrentUser | null>(startsOnDashboard ? PREVIEW_USER : null);
+
+  useEffect(() => {
+    if (startsOnDashboard) return;
+    let active = true;
+    getCurrentUser()
+      .then((current) => { if (active) { setUser(current); setAuthState('authed'); } })
+      .catch(() => { if (active) setAuthState('anon'); });
+    return () => { active = false; };
+  }, [startsOnDashboard]);
+
+  if (authState === 'loading') {
+    return <main className="page-panel"><p className="empty-state" role="status">Loading…</p></main>;
+  }
+
+  const isAuthenticated = authState === 'authed';
+  const handleLogout = () => { apiLogout().finally(() => { setUser(null); setAuthState('anon'); }); };
 
   return (
     <BrowserRouter>
       <Routes>
         <Route
           path="/login"
-          element={isAuthenticated ? <Navigate replace to="/campaigns" /> : <LoginPage onSignIn={() => setIsAuthenticated(true)} />}
+          element={isAuthenticated ? <Navigate replace to="/campaigns" /> : <LoginPage />}
         />
         <Route
           path="/campaigns"
-          element={isAuthenticated ? <DashboardRoute onLogout={() => setIsAuthenticated(false)} /> : <Navigate replace to="/login" />}
+          element={isAuthenticated && user ? <DashboardRoute user={user} onLogout={handleLogout} /> : <Navigate replace to="/login" />}
         />
         <Route
           path="/campaigns/:campaignId/*"
@@ -60,10 +82,11 @@ export default function App() {
   );
 }
 
-function DashboardRoute({ onLogout }: { onLogout: () => void }) {
+function DashboardRoute({ user, onLogout }: { user: CurrentUser; onLogout: () => void }) {
   const navigate = useNavigate();
   return (
     <CampaignDashboardPage
+      user={user}
       onOpenCampaign={(campaign) => navigate(`/campaigns/${campaign.campaignId}`)}
       onLogout={() => { onLogout(); navigate('/login'); }}
     />
@@ -296,8 +319,7 @@ function CampaignWorkspaceView({ campaign, activePage, onNavigate, onBackToCampa
   );
 }
 
-function LoginPage({ onSignIn }: { onSignIn: () => void }) {
-  const [notice, setNotice] = useState('');
+function LoginPage() {
   return (
     <main className="login-page">
       <section className="login-hero-panel" aria-labelledby="login-title">
@@ -344,45 +366,21 @@ function LoginPage({ onSignIn }: { onSignIn: () => void }) {
         <div className="login-card-header">
           <span className="eyebrow">Welcome back</span>
           <h2>Log in to your campaigns</h2>
-          <p>Sign in to pick up your campaigns right where you left off.</p>
+          <p>Sign in with Google to pick up your campaigns right where you left off.</p>
         </div>
 
-        <form onSubmit={(event) => { event.preventDefault(); onSignIn(); }}>
-          <label>
-            Email address
-            <input autoComplete="email" defaultValue="gm@example.com" inputMode="email" placeholder="you@example.com" type="email" />
-          </label>
-          <label>
-            Password
-            <input autoComplete="current-password" defaultValue="campaign-memory" placeholder="••••••••••••" type="password" />
-          </label>
-          <div className="login-options-row">
-            <label className="checkbox-label">
-              <input defaultChecked type="checkbox" />
-              <span>Remember this device</span>
-            </label>
-            <button className="link-button" onClick={() => setNotice('Password reset isn’t available in the private beta yet — reach out to your beta contact.')} type="button">Forgot password?</button>
-          </div>
-          <button className="login-submit" type="submit">Sign in</button>
-        </form>
-
-        <div className="sso-divider"><span>or continue with</span></div>
-        <div className="sso-row">
-          <button className="secondary" onClick={onSignIn} type="button">Google</button>
-          <button className="secondary" onClick={onSignIn} type="button">Discord</button>
-        </div>
-
-        {notice && <p className="empty-state" role="status">{notice}</p>}
+        <a className="button-link login-submit" href={googleLoginUrl()}>Continue with Google</a>
 
         <p className="login-footnote">
-          New to Session Smith? <button className="link-button" onClick={() => setNotice('Thanks for your interest — beta access is granted manually right now, so we’ll be in touch.')} type="button">Request beta access</button>
+          New to Session Smith? Beta access is granted manually right now — sign in with the Google
+          account your beta contact registered.
         </p>
       </section>
     </main>
   );
 }
 
-function CampaignDashboardPage({ onOpenCampaign, onLogout }: { onOpenCampaign: (campaign: CampaignSummary) => void; onLogout: () => void }) {
+function CampaignDashboardPage({ user, onOpenCampaign, onLogout }: { user: CurrentUser; onOpenCampaign: (campaign: CampaignSummary) => void; onLogout: () => void }) {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -390,8 +388,8 @@ function CampaignDashboardPage({ onOpenCampaign, onLogout }: { onOpenCampaign: (
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const profileMenuRef = useRef<HTMLDivElement>(null);
-  const accountName = 'DrowKiroth';
-  const accountEmail = 'drowkiroth@example.com';
+  const accountName = user.name;
+  const accountEmail = user.email;
   const accountTier = 'Private Beta GM';
 
   useEffect(() => {

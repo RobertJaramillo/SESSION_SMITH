@@ -1,5 +1,5 @@
 import type { CampaignListSection, CampaignSummary } from '../domain/worldbuilding';
-import type { ApiCanonEvent, ApiEntry, ApiJob, ApiProposal, ApiWorkspaceSummary, ReviewAction } from './types';
+import type { ApiCanonEvent, ApiEntry, ApiJob, ApiProposal, ApiWorkspaceSummary, CurrentUser, ReviewAction } from './types';
 
 // Empty base = same-origin relative URLs (dev, intercepted by the MSW worker).
 // Override via VITE_API_BASE to point at a real backend, or setApiBase() in tests.
@@ -12,6 +12,7 @@ export function setApiBase(base: string) {
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${apiBase}${path}`, {
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     ...init,
   });
   if (!response.ok) {
@@ -19,6 +20,22 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
   const body = await response.json();
   return body.data as T;
+}
+
+// Resolves with the signed-in Google account, or rejects (401) if no session
+// cookie is present — App.tsx uses this to decide whether to show the login page.
+export function getCurrentUser() {
+  return request<CurrentUser>('/auth/me');
+}
+
+export function logout() {
+  return fetch(`${apiBase}/auth/logout`, { method: 'POST', credentials: 'include' });
+}
+
+// Full-page navigation (not fetch) — Google's consent screen has to be a
+// top-level redirect, not an XHR.
+export function googleLoginUrl() {
+  return `${apiBase}/auth/google/login`;
 }
 
 export function getCampaignSections() {

@@ -23,6 +23,12 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-campaign_app}:${POSTGRES_PASSWORD:-change-me-local-only}@db:5432/${POSTGRES_DB:-campaign_orchestration}
       LLM_PROVIDER: ${LLM_PROVIDER:-demo}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      # Google Sign-In (backend/auth.py). Leave the client id/secret unset to
+      # keep the app open with no login gate, as before.
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      SESSION_SECRET: ${SESSION_SECRET:-}
+      OAUTH_REDIRECT_URI: ${OAUTH_REDIRECT_URI:-http://localhost:8080/auth/google/callback}
     depends_on:
       db:
         condition: service_healthy

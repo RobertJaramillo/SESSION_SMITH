@@ -318,12 +318,28 @@ class AnthropicProvider:
         raise NotImplementedError("AnthropicProvider.generate_structured")
 
 
-# Model routing by task (SOFTWARE_ARCHITECTURE.md §8.4.2): cheaper model for the
-# extraction workflow (runs after every session), stronger model for prep (the
-# GM actually reads this). Falls back to the extraction model for anything else.
-_MODEL_BY_PROMPT_VERSION = {
-    "note_extraction.v1": "gpt-4o-mini",
-    "session_prep.v1": "gpt-4o",
+# Model routing by campaign profile. The balanced default keeps the cheaper
+# model for routine extraction/world drafting and reserves the stronger model
+# for session prep; the other profiles make the cost/quality trade-off explicit.
+_MODEL_BY_PROFILE = {
+    "cheap": {
+        "note_extraction.v1": "gpt-4o-mini",
+        "world_bible.v1": "gpt-4o-mini",
+        "world_expand.v1": "gpt-4o-mini",
+        "session_prep.v1": "gpt-4o-mini",
+    },
+    "balanced": {
+        "note_extraction.v1": "gpt-4o-mini",
+        "world_bible.v1": "gpt-4o-mini",
+        "world_expand.v1": "gpt-4o-mini",
+        "session_prep.v1": "gpt-4o",
+    },
+    "premium": {
+        "note_extraction.v1": "gpt-4o",
+        "world_bible.v1": "gpt-4o",
+        "world_expand.v1": "gpt-4o",
+        "session_prep.v1": "gpt-4o",
+    },
 }
 
 # Approximate list pricing, USD per 1K tokens (input, output). Rough estimates
@@ -347,11 +363,17 @@ class OpenAIProvider:
 
     name = "openai"
 
-    def __init__(self, api_key: str, default_model: str = "gpt-4o-mini") -> None:
+    def __init__(
+        self,
+        api_key: str,
+        default_model: str = "gpt-4o-mini",
+        model_profile: str = "balanced",
+    ) -> None:
         if not api_key:
             raise ValueError("OpenAIProvider requires a non-empty api_key")
         self.api_key = api_key
         self.default_model = default_model
+        self.model_profile = model_profile if model_profile in _MODEL_BY_PROFILE else "balanced"
         self._client = None  # lazily constructed so import is only needed when used
 
     def _client_or_create(self):
@@ -369,7 +391,10 @@ class OpenAIProvider:
 
     def generate_structured(self, req: LLMRequest) -> LLMResponse:
         client = self._client_or_create()
-        model_name = req.model_name or _MODEL_BY_PROMPT_VERSION.get(req.prompt_version, self.default_model)
+        model_name = req.model_name or _MODEL_BY_PROFILE[self.model_profile].get(
+            req.prompt_version,
+            self.default_model,
+        )
 
         user_prompt = req.user_prompt
         if req.response_json_schema:

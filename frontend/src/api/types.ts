@@ -1,9 +1,12 @@
-import type { CampaignActivity, WorldCategoryId } from '../domain/worldbuilding';
+import type {
+  CampaignActivity,
+  WorldCategoryId,
+} from "../domain/worldbuilding";
 
 // DTOs for the /v1 contract (see SOFTWARE_ARCHITECTURE.md). The mock server in
 // src/mocks implements these; the real Go/Python backend will honor the same shapes.
 
-export type ReviewAction = 'approve' | 'edit_approve' | 'reject';
+export type ReviewAction = "approve" | "edit_approve" | "reject";
 
 export type CurrentUser = { email: string; name: string; picture?: string | null };
 
@@ -11,10 +14,10 @@ export type ApiProposal = {
   id: string;
   title: string;
   category: string;
-  confidence: 'High' | 'Medium' | 'Low';
+  confidence: "High" | "Medium" | "Low";
   summary: string;
   source?: string;
-  status: 'pending' | 'approved' | 'edited_approved' | 'rejected';
+  status: "pending" | "approved" | "edited_approved" | "rejected";
   // Contradictions the AI flagged against established canon while extracting
   // this proposal — surfaced so the GM can look closer before approving.
   conflicts?: string[];
@@ -41,7 +44,7 @@ export type ApiCanonEvent = {
   summary: string;
 };
 
-export type JobStatus = 'pending' | 'running' | 'succeeded' | 'failed';
+export type JobStatus = "pending" | "running" | "succeeded" | "failed";
 
 export type JobResult = {
   proposalIds?: string[];

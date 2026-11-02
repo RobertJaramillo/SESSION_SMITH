@@ -38,6 +38,8 @@ def _api_campaign(row: Mapping[str, Any]) -> dict[str, Any]:
         "updatedAt": _timestamp(row["updated_at"]),
         "description": row["description"],
         "worldStatus": row.get("world_status", "draft"),
+        "visibility": row.get("visibility", "private"),
+        "model": row.get("model_profile", row.get("model", "balanced")),
     }
 
 
@@ -88,7 +90,7 @@ class InMemoryCampaignRepository:
 
 
 def _api_campaign_memory(campaign: Mapping[str, Any]) -> dict[str, Any]:
-    return {key: value for key, value in campaign.items() if key not in {"visibility", "model"}}
+    return dict(campaign)
 
 
 class PostgresCampaignRepository:
@@ -101,7 +103,7 @@ class PostgresCampaignRepository:
             rows = connection.execute(
                 """
                 SELECT id, name, description, status, role, last_session_number,
-                       next_session_label, updated_at, world_status
+                       next_session_label, updated_at, world_status, visibility, model_profile
                 FROM campaigns
                 ORDER BY updated_at DESC, name
                 """
@@ -122,7 +124,7 @@ class PostgresCampaignRepository:
             row = connection.execute(
                 """
                 SELECT id, name, description, status, role, last_session_number,
-                       next_session_label, updated_at, world_status
+                       next_session_label, updated_at, world_status, visibility, model_profile
                 FROM campaigns WHERE id = %s
                 """,
                 (campaign_id,),
@@ -140,7 +142,7 @@ class PostgresCampaignRepository:
                 ) VALUES (%s, %s, %s, 'planning', 'owner', 0,
                           'Initial world setup incomplete', 'private', 'balanced')
                 RETURNING id, name, description, status, role, last_session_number,
-                          next_session_label, updated_at, world_status
+                          next_session_label, updated_at, world_status, visibility, model_profile
                 """,
                 (campaign_id, name, description or "New campaign world awaiting its first session."),
             ).fetchone()
@@ -164,7 +166,7 @@ class PostgresCampaignRepository:
                 SET {', '.join(assignments)}, updated_at = now()
                 WHERE id = %s
                 RETURNING id, name, description, status, role, last_session_number,
-                          next_session_label, updated_at, world_status
+                          next_session_label, updated_at, world_status, visibility, model_profile
                 """,
                 values,
             ).fetchone()

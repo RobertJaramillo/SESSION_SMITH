@@ -126,3 +126,70 @@ class AccountTests(unittest.TestCase):
             await call('POST','/v1/auth/login',{'email':email,'password':'original-password'},expected=401)
             await call('POST','/v1/auth/login',{'email':email,'password':'replacement-password'})
         self.run_scenario(scenario)
+
+    def test_friend_sharing_consent_and_third_party_isolation(self):
+        async def scenario():
+            async def call(method, path, body=None, cookie='', expected=200):
+                code, _, raw = await request_raw(method, path, body=body, headers={'cookie': cookie})
+                self.assertEqual(code, expected, raw)
+                return json.loads(raw).get('data')
+
+            suffix = uuid4().hex
+            users = []
+            for name in ('Owner', 'Friend', 'Stranger'):
+                email = f'{name.lower()}{suffix}@example.com'
+                code, headers, raw = await request_raw('POST', '/v1/auth/register', body={
+                    'name': name, 'email': email, 'password': 'long-enough-password',
+                })
+                self.assertEqual(code, 200, raw)
+                users.append((json.loads(raw)['data'], headers['set-cookie'].split(';')[0]))
+            (owner, ca), (peer, cb), (_, cc) = users
+            await call('GET', '/v1/friends', expected=401)
+            await call('POST', '/v1/friends', {'email': peer['email']}, expected=401)
+            await call('POST', '/v1/friends', {'email': f'missing{suffix}@example.com'}, ca, 404)
+            friendship = await call('POST', '/v1/friends', {'email': f"  {peer['email'].upper()}  "}, ca)
+            fid = friendship['id']
+            for cookie, incoming, other in ((ca, False, peer), (cb, True, owner)):
+                self.assertEqual(await call('GET', '/v1/friends', cookie=cookie), [
+                    {'id': fid, 'incoming': incoming, 'status': 'pending', 'user': other},
+                ])
+            self.assertEqual(await call('GET', '/v1/friends', cookie=cc), [])
+            await call('POST', f'/v1/friends/{fid}/accept', {}, cc, 404)
+            await call('DELETE', f'/v1/friends/{fid}', cookie=cc, expected=404)
+            await call('POST', f'/v1/friends/{fid}/accept', {}, cb)
+            await call('POST', f'/v1/friends/{fid}/accept', {}, cb, 404)
+
+            campaign = await call('POST', '/v1/campaigns', {'name': 'Shared world'}, ca, 201)
+            cid = campaign['campaignId']
+            # Becoming friends alone must not grant campaign access.
+            await call('GET', f'/v1/campaigns/{cid}', cookie=cb, expected=404)
+            await call('POST', f'/v1/campaigns/{cid}/invitations', {'email': peer['email'], 'role': 'viewer'}, ca)
+            invitation = (await call('GET', '/v1/invitations', cookie=cb))[0]
+            iid = invitation['id']
+            self.assertEqual(invitation['campaignName'], 'Shared world')
+            self.assertEqual(await call('GET', '/v1/invitations', cookie=cc), [])
+            await call('POST', f'/v1/invitations/{iid}/accept', {}, cc, 404)
+            await call('DELETE', f'/v1/invitations/{iid}', cookie=cc, expected=404)
+            await call('GET', f'/v1/campaigns/{cid}/members', cookie=cc, expected=404)
+            await call('GET', f'/v1/campaigns/{cid}', cookie=cb, expected=404)
+            await call('POST', f'/v1/invitations/{iid}/accept', {}, cb)
+            self.assertEqual(await call('GET', '/v1/invitations', cookie=cb), [])
+            self.assertEqual((await call('GET', f'/v1/campaigns/{cid}', cookie=cb))['role'], 'viewer')
+            await call('GET', f'/v1/campaigns/{cid}/canon-events', cookie=cb)
+            await call('GET', f'/v1/campaigns/{cid}/workspace', cookie=cb, expected=403)
+            await call('POST', f'/v1/campaigns/{cid}/invitations', {'email': owner['email']}, cb, 403)
+            await call('DELETE', f'/v1/campaigns/{cid}/members/{owner["id"]}', cookie=cb, expected=403)
+            await call('POST', f'/v1/campaigns/{cid}/invitations', {'email': peer['email']}, ca, 409)
+            # Friendship and campaign membership have independent lifecycles.
+            await call('DELETE', f'/v1/friends/{fid}', cookie=cb)
+            self.assertEqual(await call('GET', '/v1/friends', cookie=ca), [])
+            self.assertEqual(await call('GET', '/v1/friends', cookie=cb), [])
+            await call('GET', f'/v1/campaigns/{cid}', cookie=cb)
+            await call('DELETE', f'/v1/campaigns/{cid}/members/{peer["id"]}', cookie=ca)
+            await call('GET', f'/v1/campaigns/{cid}/canon-events', cookie=cb, expected=404)
+            # A removed friendship can be requested again, declined, or cancelled.
+            for remover in (cb, ca):
+                pending = await call('POST', '/v1/friends', {'email': peer['email']}, ca)
+                await call('DELETE', f'/v1/friends/{pending["id"]}', cookie=remover)
+                await call('POST', f'/v1/friends/{pending["id"]}/accept', {}, cb, 404)
+        self.run_scenario(scenario)

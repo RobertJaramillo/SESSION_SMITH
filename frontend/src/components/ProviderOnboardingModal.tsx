@@ -1,3 +1,4 @@
+import { Dialog } from "./Dialog";
 import { useState } from "react";
 import type { AIProvider } from "../types/providers";
 
@@ -15,13 +16,7 @@ export function ProviderOnboardingModal({
   const [acknowledged, setAcknowledged] = useState(false);
 
   return (
-    <div className="modal-backdrop" role="presentation">
-      <section
-        aria-labelledby="provider-onboarding-title"
-        aria-modal="true"
-        className="settings-modal provider-onboarding-modal"
-        role="dialog"
-      >
+    <Dialog labelledBy="provider-onboarding-title" onClose={onClose} className="settings-modal provider-onboarding-modal">
         <div className="settings-modal-header">
           <div>
             <span className="eyebrow">AI setup</span>
@@ -181,9 +176,8 @@ export function ProviderOnboardingModal({
               </span>
             </label>
             <p className="provider-security-note">
-              Session Smith does not save this key to browser storage, its
-              database, URLs, or job history. Use this beta flow only over HTTPS
-              in production.
+              Your key is used only in this tab and is cleared when you refresh
+              or sign out. You’ll need to enter it again afterward.
             </p>
             <div className="settings-confirm-actions">
               <button className="secondary" onClick={onClose} type="button">
@@ -269,7 +263,6 @@ export function ProviderOnboardingModal({
             </div>
           </div>
         )}
-      </section>
-    </div>
+    </Dialog>
   );
 }

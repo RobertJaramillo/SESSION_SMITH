@@ -13,9 +13,9 @@ from backend.db import connect, postgres_enabled
 class CampaignRepository(Protocol):
     storage_label: str
 
-    def list_sections(self) -> list[dict[str, Any]]: ...
+    def list_for_user(self, user_id: str) -> list[dict[str, Any]]: ...
     def get(self, campaign_id: str) -> dict[str, Any] | None: ...
-    def create(self, *, name: str, description: str) -> dict[str, Any]: ...
+    def create(self, *, name: str, description: str, owner_id: str | None = None) -> dict[str, Any]: ...
     def update(self, campaign_id: str, patch: Mapping[str, str]) -> dict[str, Any] | None: ...
     def seal_world(self, campaign_id: str) -> dict[str, Any] | None: ...
     def is_ready(self) -> bool: ...
@@ -51,17 +51,30 @@ class InMemoryCampaignRepository:
     def __init__(self, store: Any) -> None:
         self.store = store
 
-    def list_sections(self) -> list[dict[str, Any]]:
+    def _list_sections(self) -> list[dict[str, Any]]:
         return [
             {**section, "campaigns": [_api_campaign_memory(item) for item in section["campaigns"]]}
             for section in self.store.sections
         ]
 
+    def list_for_user(self, user_id: str) -> list[dict[str, Any]]:
+        from backend.accounts import accounts
+        result = []
+        seen = set()
+        with self.store.lock:
+            for section in self._list_sections():
+                for campaign in section['campaigns']:
+                    cid = campaign['campaignId']
+                    if cid not in seen and accounts.role(cid, user_id):
+                        seen.add(cid)
+                        result.append(accounts.decorate(campaign, user_id))
+        return result
+
     def get(self, campaign_id: str) -> dict[str, Any] | None:
         campaign = self.store.campaign(campaign_id)
         return _api_campaign_memory(campaign) if campaign else None
 
-    def create(self, *, name: str, description: str) -> dict[str, Any]:
+    def create(self, *, name: str, description: str, owner_id: str | None = None) -> dict[str, Any]:
         campaign = self.store._campaign(
             f"campaign_{uuid4().hex[:12]}", name, "owner", "planning", 0,
             "Initial world setup incomplete", description or "New campaign world awaiting its first session.",
@@ -98,26 +111,25 @@ class PostgresCampaignRepository:
 
     storage_label = "postgresql"
 
-    def list_sections(self) -> list[dict[str, Any]]:
+    def list_for_user(self, user_id: str) -> list[dict[str, Any]]:
         with connect() as connection:
-            rows = connection.execute(
-                """
-                SELECT id, name, description, status, role, last_session_number,
-                       next_session_label, updated_at, world_status, visibility, model_profile
-                FROM campaigns
-                ORDER BY updated_at DESC, name
-                """
-            ).fetchall()
-        return [
-            {
-                "id": "owned",
-                "title": "Owned",
-                "subtitle": "Campaign worlds where you control settings, canon, players, and AI memory.",
-                "campaigns": [_api_campaign(row) for row in rows],
-            },
-            {"id": "shared", "title": "Shared", "subtitle": "Campaigns another GM invited you to view or contribute to.", "campaigns": []},
-            {"id": "running", "title": "In progress", "subtitle": "Tables you are actively running or preparing.", "campaigns": []},
-        ]
+            rows = connection.execute("""
+                SELECT c.*, a.role AS user_role,
+                       owner.id AS owner_id, owner.name AS owner_name, owner.email AS owner_email,
+                       COALESCE(roster.players, '[]'::jsonb) AS players
+                FROM campaigns c
+                JOIN campaign_access a ON a.campaign_id=c.id AND a.user_id=%s
+                LEFT JOIN campaign_access ownership ON ownership.campaign_id=c.id AND ownership.role='owner'
+                LEFT JOIN app_users owner ON owner.id=ownership.user_id
+                LEFT JOIN LATERAL (
+                    SELECT jsonb_agg(jsonb_build_object('id',u.id,'name',u.name) ORDER BY lower(u.name),u.id) AS players
+                    FROM campaign_access p JOIN app_users u ON u.id=p.user_id
+                    WHERE p.campaign_id=c.id AND p.role='player'
+                ) roster ON true
+                ORDER BY c.updated_at DESC,c.name
+            """, (user_id,)).fetchall()
+        return [{**_api_campaign(row), 'role':row['user_role'], 'players':row['players'],
+                 'owner': {'id':row['owner_id'],'name':row['owner_name'],'email':row['owner_email']} if row['owner_id'] else None} for row in rows]
 
     def get(self, campaign_id: str) -> dict[str, Any] | None:
         with connect() as connection:
@@ -131,7 +143,7 @@ class PostgresCampaignRepository:
             ).fetchone()
         return _api_campaign(row) if row else None
 
-    def create(self, *, name: str, description: str) -> dict[str, Any]:
+    def create(self, *, name: str, description: str, owner_id: str | None = None) -> dict[str, Any]:
         campaign_id = f"campaign_{uuid4().hex[:12]}"
         with connect() as connection:
             row = connection.execute(
@@ -146,6 +158,8 @@ class PostgresCampaignRepository:
                 """,
                 (campaign_id, name, description or "New campaign world awaiting its first session."),
             ).fetchone()
+            if owner_id:
+                connection.execute("INSERT INTO campaign_access(campaign_id,user_id,role) VALUES (%s,%s,'owner')", (campaign_id,owner_id))
         return _api_campaign(row)
 
     def update(self, campaign_id: str, patch: Mapping[str, str]) -> dict[str, Any] | None:
@@ -179,7 +193,7 @@ class PostgresCampaignRepository:
                 UPDATE campaigns SET world_status = 'sealed', updated_at = now()
                 WHERE id = %s
                 RETURNING id, name, description, status, role, last_session_number,
-                          next_session_label, updated_at, world_status
+                          next_session_label, updated_at, world_status, visibility, model_profile
                 """,
                 (campaign_id,),
             ).fetchone()

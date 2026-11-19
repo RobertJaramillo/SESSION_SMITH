@@ -213,25 +213,3 @@ def generate_session_prep(job: AIJob, focus: str | None, llm: LLMProvider, manua
     prep = tools.store_session_prep(job.campaign_id, job, output, job.session_id, resp)
     tools.record_usage_event(job, resp)
     return prep
-
-
-# ---------------------------------------------------------------------------
-# The worker loop — claim a pending job and dispatch to the right workflow
-# ---------------------------------------------------------------------------
-
-def run_job(job: AIJob, llm: LLMProvider, **inputs) -> None:
-    """Dispatch one claimed job. In the real loop, wrap in try/except to set
-    JobStatus.failed + error, and JobStatus.succeeded + result on success."""
-    if job.job_type == JobType.extract_memory:
-        extract_memory(job, inputs["note_id"], inputs["raw_note"], llm)
-    elif job.job_type == JobType.generate_session_prep:
-        generate_session_prep(job, inputs.get("focus"), llm)
-    else:
-        raise ValueError(f"unhandled job_type: {job.job_type}")
-
-
-def poll_loop(llm: LLMProvider) -> None:
-    """Prototype: SELECT one ai_job WHERE status='pending' -> mark 'running' ->
-    run_job -> mark 'succeeded'/'failed'. Poll every few seconds
-    (SOFTWARE_ARCHITECTURE.md §4.5). Replace with a real queue later."""
-    raise NotImplementedError

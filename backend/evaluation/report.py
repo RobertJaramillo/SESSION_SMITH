@@ -13,7 +13,6 @@ with a conclusion.
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 from .rubric import FACT_GROUNDED_CRITERIA, FACT_METRIC_HIGHER_IS_BETTER, RUBRIC_BY_KEY

@@ -1,6 +1,19 @@
-import { googleLoginUrl } from "../api/client";
+import { useEffect, useState } from "react";
+import { getAuthConfig, googleLoginUrl, authenticate, type Account } from "../api/client";
 
-export function LoginPage() {
+export function LoginPage({ onSignIn }: { onSignIn: (account: Account) => void }) {
+  const [googleEnabled, setGoogleEnabled] = useState(false);
+  useEffect(() => {
+    let active = true;
+    getAuthConfig()
+      .then((config) => { if (active) setGoogleEnabled(config.googleEnabled); })
+      .catch(() => {});
+    return () => { active = false; };
+  }, []);
+  const [notice, setNotice] = useState("");
+  const [register, setRegister] = useState(false);
+  const [busy, setBusy] = useState(false);
+
   return (
     <main className="login-page">
       <section className="login-hero-panel" aria-labelledby="login-title">
@@ -53,17 +66,60 @@ export function LoginPage() {
       <section className="login-card" aria-label="Sign in form">
         <div className="login-card-header">
           <span className="eyebrow">Welcome back</span>
-          <h2>Log in to your campaigns</h2>
-          <p>Sign in with Google to pick up your campaigns right where you left off.</p>
+          <h2>{register ? "Create your account" : "Log in to your campaigns"}</h2>
+          <p>Sign in to pick up your campaigns right where you left off.</p>
         </div>
 
-        <a className="button-link login-submit" href={googleLoginUrl()}>
-          Continue with Google
-        </a>
+        {googleEnabled && <a className="button-link login-submit" href={googleLoginUrl()}>Continue with Google</a>}
 
+        <form
+          onSubmit={async (event) => {
+            event.preventDefault();
+            if (busy) return;
+            const fields = new FormData(event.currentTarget);
+            setBusy(true);
+            setNotice("");
+            try {
+              onSignIn(await authenticate(register, { email: String(fields.get("email")), password: String(fields.get("password")), name: String(fields.get("name") ?? "") }));
+            } catch (error) { setNotice(error instanceof Error ? error.message : "Could not sign in."); }
+            finally { setBusy(false); }
+          }}
+        >
+          {register && <label>Display name<input name="name" required maxLength={80} autoComplete="nickname" /></label>}
+          <label>
+            Email address
+            <input
+              autoComplete="email"
+              name="email" required
+              inputMode="email"
+              placeholder="you@example.com"
+              type="email"
+            />
+          </label>
+          <label>
+            Password
+            <input
+              autoComplete="current-password"
+              name="password" required minLength={12} maxLength={256}
+              placeholder="••••••••••••"
+              type="password"
+            />
+          </label>
+          {register && <p>Use a password with at least 12 characters.</p>}
+          <button className="login-submit" disabled={busy} type="submit">
+            {busy ? "Please wait…" : register ? "Create account" : "Sign in"}
+          </button>
+        </form>
+
+        {notice && (
+          <p className="empty-state" role="status">
+            {notice}
+          </p>
+        )}
         <p className="login-footnote">
-          New to Session Smith? Beta access is granted manually right now — sign in with
-          the Google account your beta contact registered.
+          <button className="link-button" onClick={() => { setRegister(!register); setNotice(""); }} type="button">
+            {register ? "Already have an account? Sign in" : "New here? Create an account"}
+          </button>
         </p>
       </section>
     </main>

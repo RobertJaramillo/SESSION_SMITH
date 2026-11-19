@@ -1,6 +1,8 @@
 /** @vitest-environment jsdom */
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
+import { http, HttpResponse } from "msw";
+import { server } from "../src/mocks/server";
 import App from "../src/App";
 
 const ASHES = "campaign_ashes_of_kestrel_vale";
@@ -46,12 +48,26 @@ describe("routing", () => {
     ).toBeTruthy();
   });
 
-  it("renders a working Google sign-in link on the login route", async () => {
+  it("offers Google alongside password sign-in when configured", async () => {
+    server.use(http.get("*/auth/config", () => HttpResponse.json({ data: { googleEnabled: true } })));
+    window.history.pushState({}, "", "/login");
+    render(<App />);
+    expect((await screen.findByRole("link", { name: "Continue with Google" })).getAttribute("href")).toMatch(/\/auth\/google\/login$/);
+    expect(screen.getByRole("button", { name: /^sign in$/i })).toBeTruthy();
+  });
+
+  it("signs in with account credentials", async () => {
     window.history.pushState({}, "", "/login");
     render(<App />);
 
-    const link = await screen.findByRole("link", { name: /continue with google/i });
-    expect(link.getAttribute("href")).toMatch(/\/auth\/google\/login$/);
+    await screen.findByRole("button", { name: /^sign in$/i });
+    fireEvent.change(screen.getByLabelText(/email address/i), { target: { value: "gm@example.com" } });
+    fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: "long-demo-password" } });
+    fireEvent.click(screen.getByRole("button", { name: /^sign in$/i }));
+
+    expect(
+      await screen.findByRole("heading", { name: /drowkiroth/i }),
+    ).toBeTruthy();
   });
 
   it("creates a campaign and opens its workspace", async () => {

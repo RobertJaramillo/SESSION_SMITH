@@ -8,7 +8,7 @@ from typing import Any
 import backend.app as campaign_api
 
 
-async def request(method: str, path: str, body: dict[str, Any] | None = None, query: str = "") -> tuple[int, dict[str, Any]]:
+async def request(method: str, path: str, body: dict[str, Any] | None = None, query: str = "", headers: dict[str, str] | None = None) -> tuple[int, dict[str, Any]]:
     scope: dict[str, Any] = {
         "type": "http",
         "asgi": {"version": "3.0"},
@@ -22,6 +22,7 @@ async def request(method: str, path: str, body: dict[str, Any] | None = None, qu
         "client": ("test", 1),
         "server": ("test", 80),
     }
+    scope["headers"].extend((k.lower().encode(),v.encode()) for k,v in (headers or {}).items())
     raw_body = json.dumps(body).encode() if body is not None else b""
     if body is not None:
         scope["headers"].append((b"content-type", b"application/json"))
@@ -45,7 +46,7 @@ async def request(method: str, path: str, body: dict[str, Any] | None = None, qu
     return response_status, json.loads(response_body)
 
 
-async def request_raw(method: str, path: str, query: str = "") -> tuple[int, dict[str, str], bytes]:
+async def request_raw(method: str, path: str, query: str = "", headers: dict[str, str] | None = None, body: dict[str, Any] | None = None) -> tuple[int, dict[str, str], bytes]:
     """Like request(), but returns (status, headers, raw_body) without JSON
     parsing — for non-JSON responses (e.g. the world-export markdown/PDF)."""
     scope: dict[str, Any] = {
@@ -61,6 +62,10 @@ async def request_raw(method: str, path: str, query: str = "") -> tuple[int, dic
         "client": ("test", 1),
         "server": ("test", 80),
     }
+    scope["headers"].extend((k.lower().encode(),v.encode()) for k,v in (headers or {}).items())
+    raw_body = json.dumps(body).encode() if body is not None else b""
+    if body is not None:
+        scope["headers"].append((b"content-type", b"application/json"))
     messages: list[dict[str, Any]] = []
     received = False
 
@@ -69,7 +74,7 @@ async def request_raw(method: str, path: str, query: str = "") -> tuple[int, dic
         if received:
             return {"type": "http.disconnect"}
         received = True
-        return {"type": "http.request", "body": b"", "more_body": False}
+        return {"type": "http.request", "body": raw_body, "more_body": False}
 
     async def send(message: dict[str, Any]) -> None:
         messages.append(message)

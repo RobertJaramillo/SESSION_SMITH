@@ -4,9 +4,9 @@ import App from "./App";
 import "./styles.css";
 
 async function start() {
-  // Keep mocks as the default for UI-only work. Set VITE_USE_MOCKS=false to
-  // connect /v1 requests to the FastAPI server through Vite's proxy.
-  if (import.meta.env.DEV && import.meta.env.VITE_USE_MOCKS !== "false") {
+  // Real accounts use FastAPI by default. Explicitly opt into UI-only mocks
+  // with VITE_USE_MOCKS=true.
+  if (import.meta.env.DEV && import.meta.env.VITE_USE_MOCKS === "true") {
     const { worker } = await import("./mocks/browser");
     await worker.start({ onUnhandledRequest: "bypass" });
   }

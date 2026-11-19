@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { createCampaign, getCampaignSections } from "../api/client";
+import { FriendsPanel } from "../components/FriendsPanel";
+import { createCampaign, getCampaignSections, type Account } from "../api/client";
 import { CreateCampaignDialog } from "../components/CreateCampaignDialog";
 import { SettingsModal } from "../components/SettingsModal";
-import type { CurrentUser } from "../api/types";
 import type {
   CampaignListSection,
   CampaignSummary,
@@ -10,18 +10,22 @@ import type {
 import type { AIProvider } from "../types/providers";
 
 export function CampaignDashboardPage({
-  user,
+  account,
+  onAccountUpdated,
   onOpenCampaign,
   onLogout,
   provider,
   onManageProvider,
 }: {
-  user: CurrentUser;
+  account: Account;
+  onAccountUpdated: (account: Account) => void;
   onOpenCampaign: (campaign: CampaignSummary) => void;
   onLogout: () => void;
   provider: AIProvider;
   onManageProvider: () => void;
 }) {
+  const [socialOpen, setSocialOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -29,16 +33,9 @@ export function CampaignDashboardPage({
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const profileMenuRef = useRef<HTMLDivElement>(null);
-  const accountName = user.name;
-  const accountEmail = user.email;
+  const accountName = account.name;
+  const accountEmail = account.email;
   const accountTier = "Private Beta GM";
-  const accountInitials =
-    accountName
-      .split(" ")
-      .slice(0, 2)
-      .map((word) => word[0])
-      .join("")
-      .toUpperCase() || "GM";
   useEffect(() => {
     let active = true;
     getCampaignSections()
@@ -58,7 +55,7 @@ export function CampaignDashboardPage({
     return () => {
       active = false;
     };
-  }, []);
+  }, [refreshKey]);
   useEffect(() => {
     if (!profileMenuOpen) return;
     const onPointerDown = (event: MouseEvent) => {
@@ -91,7 +88,7 @@ export function CampaignDashboardPage({
               onClick={() => setProfileMenuOpen((open) => !open)}
               type="button"
             >
-              {accountInitials}
+              {account.name.slice(0, 2).toUpperCase()}
             </button>
             {profileMenuOpen && (
               <div className="profile-menu" role="menu">
@@ -124,6 +121,7 @@ export function CampaignDashboardPage({
             <span className="eyebrow">Signed in as</span>
             <h2 className="account-name">{accountName}</h2>
           </div>
+          <button type="button" className={`dashboard-friends-button${socialOpen ? " is-active" : ""}`} aria-expanded={socialOpen} onClick={() => setSocialOpen(!socialOpen)}>Friends & invitations</button>
           <button
             className="create-campaign-button"
             onClick={() => setCreateOpen(true)}
@@ -137,6 +135,7 @@ export function CampaignDashboardPage({
           <p>Choose a world to open, or start a new campaign.</p>
         </div>
       </header>
+      {socialOpen && <FriendsPanel onJoined={() => setRefreshKey(key => key + 1)} />}
       {loadError && (
         <p className="settings-validation-message" role="status">
           {loadError}
@@ -184,6 +183,7 @@ export function CampaignDashboardPage({
                     </div>
                   </div>
                   <p>{campaign.description}</p>
+                  <div className="campaign-ownership"><span>Owned by <strong>{campaign.owner?.name ?? (campaign.role === "owner" ? "you" : "Campaign owner")}</strong></span><span className={`social-role social-role-${campaign.role}`}>{campaign.role}</span></div>
                   <div className="campaign-tile-meta">
                     <span>Session {campaign.lastSessionNumber}</span>
                     <span>{campaign.nextSessionLabel}</span>
@@ -202,6 +202,7 @@ export function CampaignDashboardPage({
       </section>
       {settingsOpen && (
         <SettingsModal
+          onAccountUpdated={onAccountUpdated}
           accountEmail={accountEmail}
           accountName={accountName}
           accountTier={accountTier}

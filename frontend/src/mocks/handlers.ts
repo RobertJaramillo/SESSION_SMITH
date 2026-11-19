@@ -118,6 +118,7 @@ const nextId = (prefix: string) => {
 
 // Reset the mock server state between tests for isolation.
 export function resetStore() {
+  mockSignedIn = false;
   store.clear();
   jobs.clear();
   campaignSections = null;
@@ -171,16 +172,18 @@ function ensureState(campaignId: string): CampaignState {
   return state;
 }
 
+const demoAccount = { id: "demo_gm", name: "DrowKiroth", email: "drowkiroth@example.com" };
+let mockSignedIn = false;
 export const handlers = [
-  // No mock session by default — tests that need an authenticated App.tsx
-  // override this with server.use(...) (see frontend/tests/app-flow.test.tsx).
-  http.get("*/auth/me", () =>
-    HttpResponse.json(
-      { error: { code: "not_authenticated", message: "Not signed in." } },
-      { status: 401 },
-    ),
-  ),
-
+  http.get("*/auth/config", () => HttpResponse.json({ data: { googleEnabled: false } })),
+  http.get("*/v1/auth/me", () => mockSignedIn || new URLSearchParams(window.location.search).get("preview") === "dashboard" ? HttpResponse.json({data:demoAccount}) : HttpResponse.json({error:{message:"Sign in to continue."}},{status:401})),
+  http.post("*/v1/auth/login", () => { mockSignedIn = true; return HttpResponse.json({data:demoAccount}); }),
+  http.post("*/v1/auth/register", () => { mockSignedIn = true; return HttpResponse.json({data:demoAccount}); }),
+  http.patch("*/v1/auth/me", async ({ request }) => HttpResponse.json({data:{...demoAccount, ...await request.json() as object}})),
+  http.post("*/v1/auth/logout", () => { mockSignedIn = false; return HttpResponse.json({data:null}); }),
+  http.get("*/v1/friends", () => HttpResponse.json({data:[]})),
+  http.get("*/v1/invitations", () => HttpResponse.json({data:[]})),
+  http.get("*/v1/campaigns/:campaignId/members", () => HttpResponse.json({data:{members:[{...demoAccount,role:"owner"}],invitations:[]}})),
   http.get("*/v1/campaigns", () =>
     HttpResponse.json({ data: ensureSections() }),
   ),

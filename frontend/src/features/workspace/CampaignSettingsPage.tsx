@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { CampaignMembersPanel } from "../../components/CampaignMembersPanel";
 import { updateCampaign } from "../../api/client";
 import { PageHeader } from "../../components/Layout";
 import {
@@ -63,6 +64,7 @@ export function CampaignSettingsPage({
         title="Model, visibility, and data controls"
         body="Owner controls for this campaign — choose the AI model, set who can see it, and export or archive your data."
       />
+      <CampaignMembersPanel campaignId={campaign.campaignId} />
       <div className="two-column">
         <article className="card">
           <h3>Campaign</h3>

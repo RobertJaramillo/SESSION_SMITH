@@ -43,9 +43,9 @@ import type {
   ApiEntry,
   ApiProposal,
   ApiWorkspaceSummary,
-  CurrentUser,
   ReviewAction,
 } from "../api/types";
+import type { Account } from "../api/client";
 import type { AIProvider } from "../types/providers";
 
 type NoteSubmission = { note: string; sessionNumber: string; title: string };
@@ -54,27 +54,27 @@ const WORKSPACE_PAGES = campaignWorkspaceNavItems.map(
 ) as string[];
 
 export function DashboardRoute({
-  user,
+  account,
+  onAccountUpdated,
   onLogout,
   provider,
   onManageProvider,
 }: {
-  user: CurrentUser;
-  onLogout: () => void;
+  account: Account;
+  onAccountUpdated: (account: Account) => void;
+  onLogout: () => Promise<void>;
   provider: AIProvider;
   onManageProvider: () => void;
 }) {
   const navigate = useNavigate();
   return (
     <CampaignDashboard
-      user={user}
+      account={account}
+      onAccountUpdated={onAccountUpdated}
       onOpenCampaign={(campaign) =>
         navigate(`/campaigns/${campaign.campaignId}`)
       }
-      onLogout={() => {
-        onLogout();
-        navigate("/login");
-      }}
+      onLogout={() => { void onLogout(); }}
       provider={provider}
       onManageProvider={onManageProvider}
     />
@@ -117,6 +117,14 @@ export function WorkspaceRoute() {
         </p>
       </main>
     );
+  }
+
+  if (campaign.role !== "owner" && campaign.role !== "gm") {
+    return <main className="page-panel"><button onClick={() => navigate("/campaigns")}>Back to campaigns</button>
+      <h1>{campaign.name}</h1><p>Owned by {campaign.owner?.name} · Your role: {campaign.role}</p>
+      <p>View the approved campaign canon shared by your GM.</p>
+      <CampaignCanonBrowserPage campaignId={campaign.campaignId} />
+    </main>;
   }
 
   const activePage: CampaignWorkspacePage = WORKSPACE_PAGES.includes(splat)

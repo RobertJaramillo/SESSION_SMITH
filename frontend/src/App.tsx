@@ -2,48 +2,23 @@ import { useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { LoginPage } from "./pages/LoginPage";
 import { ProviderOnboardingModal as ProviderOnboardingDialog } from "./components/ProviderOnboardingModal";
-import {
-  clearSessionAIProvider,
-  getCurrentUser,
-  logout as apiLogout,
-  setSessionOpenAIKey,
-} from "./api/client";
-import type { CurrentUser } from "./api/types";
+import { clearSessionAIProvider, setSessionOpenAIKey, getAccount, logout, type Account } from "./api/client";
 import type { AIProvider } from "./types/providers";
 import { DashboardRoute, WorkspaceRoute } from "./routes/AppRoutes";
 
-const PREVIEW_USER: CurrentUser = { email: "drowkiroth@example.com", name: "DrowKiroth" };
-
 export default function App() {
-  const startsOnDashboard =
-    new URLSearchParams(window.location.search).get("preview") === "dashboard";
-  const [authState, setAuthState] = useState<"loading" | "authed" | "anon">(
-    startsOnDashboard ? "authed" : "loading",
-  );
-  const [user, setUser] = useState<CurrentUser | null>(startsOnDashboard ? PREVIEW_USER : null);
+  const [account, setAccount] = useState<Account | null>(null);
+  const [checking, setChecking] = useState(true);
+  const isAuthenticated = account !== null;
+  useEffect(() => {
+    getAccount().then(setAccount).catch(() => setAccount(null)).finally(() => setChecking(false));
+  }, []);
+  const [signOutError, setSignOutError] = useState("");
   const [providerSetupOpen, setProviderSetupOpen] = useState(false);
   const [provider, setProvider] = useState<AIProvider>("demo");
 
-  useEffect(() => {
-    if (startsOnDashboard) return;
-    let active = true;
-    getCurrentUser()
-      .then((current) => {
-        if (active) {
-          setUser(current);
-          setAuthState("authed");
-        }
-      })
-      .catch(() => {
-        if (active) setAuthState("anon");
-      });
-    return () => {
-      active = false;
-    };
-  }, [startsOnDashboard]);
-
   const configureProvider = (nextProvider: AIProvider, apiKey = "") => {
-    if (authState !== "authed") {
+    if (!isAuthenticated) {
       setProviderSetupOpen(false);
       return;
     }
@@ -53,41 +28,43 @@ export default function App() {
     setProviderSetupOpen(false);
   };
 
-  const signOut = () => {
+  const signOut = async () => {
+    setSignOutError("");
+    try { await logout(); } catch { setSignOutError("Could not sign out. Please try again."); return; }
     clearSessionAIProvider();
     setProvider("demo");
     setProviderSetupOpen(false);
-    apiLogout().finally(() => {
-      setUser(null);
-      setAuthState("anon");
-    });
+    setAccount(null);
   };
 
-  if (authState === "loading") {
-    return (
-      <main className="page-panel">
-        <p className="empty-state" role="status">
-          Loading…
-        </p>
-      </main>
-    );
-  }
-
-  const isAuthenticated = authState === "authed";
+  if (checking) return <main className="page-panel"><p role="status">Checking your session…</p></main>;
 
   return (
     <BrowserRouter>
+      {signOutError && <p role="alert">{signOutError}</p>}
       <Routes>
         <Route
           path="/login"
-          element={isAuthenticated ? <Navigate replace to="/campaigns" /> : <LoginPage />}
+          element={
+            isAuthenticated ? (
+              <Navigate replace to="/campaigns" />
+            ) : (
+              <LoginPage
+                onSignIn={(user) => {
+                  setAccount(user);
+                  setProviderSetupOpen(true);
+                }}
+              />
+            )
+          }
         />
         <Route
           path="/campaigns"
           element={
-            isAuthenticated && user ? (
+            isAuthenticated ? (
               <DashboardRoute
-                user={user}
+                account={account!}
+                onAccountUpdated={setAccount}
                 onLogout={signOut}
                 provider={provider}
                 onManageProvider={() => setProviderSetupOpen(true)}
@@ -99,11 +76,19 @@ export default function App() {
         />
         <Route
           path="/campaigns/:campaignId/*"
-          element={isAuthenticated ? <WorkspaceRoute /> : <Navigate replace to="/login" />}
+          element={
+            isAuthenticated ? (
+              <WorkspaceRoute />
+            ) : (
+              <Navigate replace to="/login" />
+            )
+          }
         />
         <Route
           path="*"
-          element={<Navigate replace to={isAuthenticated ? "/campaigns" : "/login"} />}
+          element={
+            <Navigate replace to={isAuthenticated ? "/campaigns" : "/login"} />
+          }
         />
       </Routes>
       {providerSetupOpen && (

@@ -4,7 +4,6 @@ from __future__ import annotations
 from contextlib import contextmanager
 import hashlib
 import hmac
-import os
 from pathlib import Path
 import secrets
 import sqlite3
@@ -49,9 +48,10 @@ class Accounts:
         self.memory.execute('PRAGMA foreign_keys=ON')
         schema = Path(__file__).with_name('migrations').joinpath('007_accounts_and_sharing.sql').read_text()
         # Campaign rows live in the existing development store, outside SQLite.
-        schema = schema.replace(' REFERENCES campaigns(id) ON DELETE CASCADE', '')
+        schema = schema.replace(' REFERENCES campaigns(id) ON DELETE CASCADE', '').replace(",'viewer'", '')
         self.memory.executescript(schema)
         self.memory.executescript(Path(__file__).with_name("migrations").joinpath("008_google_identities.sql").read_text())
+        self.memory.executescript(Path(__file__).with_name("migrations").joinpath("010_firebase_identities.sql").read_text())
 
     @contextmanager
     def transaction(self):
@@ -64,6 +64,9 @@ class Accounts:
                     yield lambda sql, args=(): self.memory.execute(sql.replace('%s', '?'), args)
 
     def user_for_token(self, token):
+        from backend import firebase_auth
+        if firebase_auth.enabled():
+            return firebase_auth.user_for_cookie(token)
         if not token:
             return None
         with self.transaction() as sql:
@@ -81,7 +84,10 @@ class Accounts:
             return dict(row) if row else None
 
     def decorate(self, campaign, user_id):
-        return {**campaign, 'role': self.role(campaign['campaignId'], user_id), 'owner': self.owner(campaign['campaignId'])}
+        with self.transaction() as sql:
+            players = sql("SELECT u.id,u.name FROM app_users u JOIN campaign_access a ON a.user_id=u.id WHERE a.campaign_id=%s AND a.role='player' ORDER BY lower(u.name),u.id", (campaign['campaignId'],)).fetchall()
+        return {**campaign, 'role': self.role(campaign['campaignId'], user_id),
+                'owner': self.owner(campaign['campaignId']), 'players': [dict(player) for player in players]}
 
 
 accounts = Accounts()
@@ -90,7 +96,7 @@ router = APIRouter(prefix='/v1')
 
 class Credentials(BaseModel):
     email: str = Field(max_length=254)
-    password: str = Field(min_length=12, max_length=256)
+    password: str = Field(min_length=1, max_length=256)
 
     @field_validator('email')
     @classmethod
@@ -109,6 +115,7 @@ def validated_email(value):
 
 
 class Registration(Credentials):
+    password: str = Field(min_length=12, max_length=256)
     name: str = Field(min_length=1, max_length=80)
 
     @field_validator('name')
@@ -131,12 +138,16 @@ def session_response(user, request, sql, response=None):
     sql('INSERT INTO account_sessions(token_hash,user_id,expires_at) VALUES (%s,%s,%s)', (hashlib.sha256(token.encode()).hexdigest(), user['id'], time.time()+SESSION_SECONDS))
     if response is None:
         response = JSONResponse({'data': public(user)})
-    response.set_cookie(COOKIE, token, max_age=SESSION_SECONDS, httponly=True, samesite='lax', secure=os.getenv('SESSION_COOKIE_SECURE', '').lower() == 'true' or request.url.scheme == 'https')
+    from backend.session_cookies import set_session_cookie
+    set_session_cookie(response, request, COOKIE, token, SESSION_SECONDS)
     return response
 
 
 @router.post('/auth/register')
 def register(payload: Registration, request: Request):
+    from backend import firebase_auth
+    if firebase_auth.enabled():
+        return firebase_auth.register(payload)
     hashed = password_hash(payload.password)
     with accounts.transaction() as sql:
         # Serialize account creation across API processes as well as threads.
@@ -151,6 +162,9 @@ def register(payload: Registration, request: Request):
 
 @router.post('/auth/login')
 def login(payload: Credentials, request: Request):
+    from backend import firebase_auth
+    if firebase_auth.enabled():
+        return firebase_auth.password_login(payload, request)
     with accounts.transaction() as sql:
         row = sql('SELECT * FROM app_users WHERE email=%s', (payload.email,)).fetchone()
         stored = row['password_hash'] if row else '0'*32 + ':' + '0'*128
@@ -166,6 +180,9 @@ def me(request: Request):
 
 @router.post('/auth/logout')
 def logout(request: Request):
+    from backend import firebase_auth
+    if firebase_auth.enabled():
+        return firebase_auth.logout(request)
     with accounts.transaction() as sql:
         sql('DELETE FROM account_sessions WHERE token_hash=%s', (hashlib.sha256(request.cookies.get(COOKIE, '').encode()).hexdigest(),))
     response = JSONResponse({'data': None})
@@ -222,7 +239,7 @@ def remove_friend(friend_id: str, request: Request):
 
 
 class Invitation(FriendTarget):
-    role: Literal['player','viewer'] = 'player'
+    role: Literal['player'] = 'player'
 
 
 @router.post('/campaigns/{campaign_id}/invitations')
@@ -303,6 +320,16 @@ class ProfilePatch(BaseModel):
 @router.patch('/auth/me')
 def update_profile(payload: ProfilePatch, request: Request):
     user = current(request)
+    from backend import firebase_auth
+    if firebase_auth.enabled():
+        if payload.email is not None or payload.password is not None:
+            fail('Use Firebase password recovery to change your password. Email changes are not available yet.', 400)
+        name = payload.name.strip() if payload.name is not None else user['name']
+        if not name:
+            fail('Enter a display name.', 422)
+        with accounts.transaction() as sql:
+            sql('UPDATE app_users SET name=%s WHERE id=%s', (name, user['id']))
+        return {'data': public({**user, 'name': name})}
     if (payload.email is not None or payload.password is not None) and not hmac.compare_digest(password_hash(payload.currentPassword,user['password_hash'].split(':')[0]),user['password_hash']):
         fail('Your current password is incorrect.',403)
     name = payload.name.strip() if payload.name is not None else user['name']
@@ -319,3 +346,49 @@ def update_profile(payload: ProfilePatch, request: Request):
         if payload.email is not None or payload.password is not None:
             sql('DELETE FROM account_sessions WHERE user_id=%s',(user['id'],))
         return session_response({**user,'name':name,'email':email},request,sql)
+
+
+class RecoveryEmail(BaseModel):
+    email: str = Field(max_length=254)
+
+
+@router.post('/auth/forgot-password')
+def forgot_password(payload: RecoveryEmail):
+    from backend import firebase_auth
+    if not firebase_auth.enabled():
+        fail('Password recovery requires Firebase authentication.', 503)
+    return firebase_auth.recovery(validated_email(payload.email))
+
+
+@router.post('/auth/resend-verification')
+def resend_verification(payload: Credentials):
+    from backend import firebase_auth
+    if not firebase_auth.enabled():
+        fail('Email verification requires Firebase authentication.', 503)
+    return firebase_auth.resend(payload)
+
+
+class OwnershipTransfer(BaseModel):
+    friendId: str = Field(min_length=1, max_length=128)
+
+
+@router.post('/campaigns/{campaign_id}/transfer-ownership')
+def transfer_ownership(campaign_id: str, payload: OwnershipTransfer, request: Request):
+    user = current(request)
+    if payload.friendId == user['id']:
+        fail('You already own this campaign.')
+    pair = ':'.join(sorted([user['id'], payload.friendId]))
+    with accounts.transaction() as sql:
+        suffix = ' FOR UPDATE' if postgres_enabled() else ''
+        friend = sql("SELECT id FROM friendships WHERE pair_key=%s AND status='accepted'" + suffix, (pair,)).fetchone()
+        if not friend:
+            fail('Choose an accepted friend.', 400)
+        # The conditional update serializes concurrent transfers and rechecks
+        # ownership inside the transaction, beyond the middleware check.
+        result = sql("UPDATE campaign_access SET role='player' WHERE campaign_id=%s AND user_id=%s AND role='owner'", (campaign_id, user['id']))
+        if result.rowcount != 1:
+            fail('Only the current owner can transfer this campaign.', 403)
+        sql("INSERT INTO campaign_access(campaign_id,user_id,role) VALUES (%s,%s,'owner') ON CONFLICT(campaign_id,user_id) DO UPDATE SET role='owner'", (campaign_id, payload.friendId))
+        sql('DELETE FROM campaign_invitations WHERE campaign_id=%s AND email IN (SELECT email FROM app_users WHERE id=%s)', (campaign_id, payload.friendId))
+        sql('UPDATE campaign_invitations SET sender_id=%s WHERE campaign_id=%s', (payload.friendId, campaign_id))
+    return {'data': {'ownerId': payload.friendId, 'previousOwnerRole': 'player'}}

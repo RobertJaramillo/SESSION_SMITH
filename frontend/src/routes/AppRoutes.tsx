@@ -20,11 +20,12 @@ import {
 import {
   WORLD_CATEGORIES,
   campaignWorkspaceNavItems,
-  getCampaignWorkspace,
   type CampaignSummary,
   type CampaignWorkspacePage,
 } from "../domain/worldbuilding";
 import {
+  approveSessionPrep,
+  getSessionPrep,
   createEntry,
   getCampaign,
   getWorkspaceSummary,
@@ -154,7 +155,6 @@ function CampaignWorkspaceView({
   onNavigate: (page: CampaignWorkspacePage) => void;
   onBackToCampaigns: () => void;
 }) {
-  const seed = getCampaignWorkspace(campaign);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [extracting, setExtracting] = useState(false);
@@ -178,13 +178,31 @@ function CampaignWorkspaceView({
   const [canonEvents, setCanonEvents] = useState<ApiCanonEvent[]>([]);
   const [workspace, setWorkspace] = useState<ApiWorkspaceSummary | null>(null);
   const [prep, setPrep] = useState<PrepState>(() => ({
-    goal: seed.prepGoal,
+    goal: "",
     tone: "danger",
-    memories: seed.prepMemoriesHint,
-    outline: seed.prepOutline.join("\n"),
+    memories: "",
+    outline: "",
   }));
-  const [prepGenerating, setPrepGenerating] = useState(false);
   const [prepFeedback, setPrepFeedback] = useState<BuildFeedback | null>(null);
+  const [prepId, setPrepId] = useState("");
+  const [prepSaving, setPrepSaving] = useState(false);
+  useEffect(() => {
+    let active = true;
+    getSessionPrep(campaign.campaignId).then(saved => {
+      if (active && saved) { setPrepId(saved.prepId); setPrep(current => ({ ...current, outline: saved.outline })); }
+    }).catch(() => { if (active) setPrepFeedback(describePrepFailure("Could not load saved session prep.")); });
+    return () => { active = false; };
+  }, [campaign.campaignId]);
+  const savePrep = async () => {
+    if (!prepId || prepSaving) return;
+    setPrepSaving(true);
+    try {
+      await approveSessionPrep(campaign.campaignId, prepId, prep.outline);
+      setPrepFeedback({ kind: "success", title: "Session prep saved", message: "Your edited outline is approved and saved." });
+    } catch { setPrepFeedback(describePrepFailure("Could not save session prep.")); }
+    finally { setPrepSaving(false); }
+  };
+  const [prepGenerating, setPrepGenerating] = useState(false);
 
   const refresh = useCallback(async () => {
     const [pending, entries, summary, canon, fresh] = await Promise.all([
@@ -359,6 +377,8 @@ function CampaignWorkspaceView({
       const outline = job.result?.outline;
       if (outline) {
         setPrep((current) => ({ ...current, outline: outline.join("\n") }));
+        const saved = await getSessionPrep(campaign.campaignId);
+        if (saved) setPrepId(saved.prepId);
         setPrepFeedback({
           kind: "success",
           title: "Session prep is ready",
@@ -415,6 +435,9 @@ function CampaignWorkspaceView({
           feedback={prepFeedback}
           onChange={(patch) => setPrep((current) => ({ ...current, ...patch }))}
           onGenerate={generatePrep}
+          onSave={savePrep}
+          saving={prepSaving}
+          canSave={Boolean(prepId)}
         />
       )}
       {activePage === "notes" && (
@@ -437,7 +460,7 @@ function CampaignWorkspaceView({
         <CampaignCanonBrowserPage campaignId={campaign.campaignId} />
       )}
       {activePage === "settings" && (
-        <CampaignSettingsPage campaign={campaign} />
+        <CampaignSettingsPage campaign={campaign} onOwnershipTransferred={onBackToCampaigns} />
       )}
     </AppShell>
   );

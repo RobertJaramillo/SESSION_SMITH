@@ -31,7 +31,7 @@ from itertools import combinations
 from backend.llm_provider import LLMProvider
 
 from .llm_json import generate_json
-from .rubric import DEFAULT_RUBRIC, RUBRIC_BY_KEY
+from .rubric import DEFAULT_RUBRIC
 from .schemas import (
     AgreementReport,
     Disagreement,

@@ -5,6 +5,7 @@ import { http, HttpResponse } from "msw";
 import { server } from "../src/mocks/server";
 import { FriendsPanel } from "../src/components/FriendsPanel";
 import { CampaignMembersPanel } from "../src/components/CampaignMembersPanel";
+import { CampaignDashboardPage } from "../src/pages/CampaignDashboardPage";
 import { LoginPage } from "../src/pages/LoginPage";
 
 afterEach(cleanup);
@@ -45,10 +46,9 @@ it("invites an accepted friend with an explicit campaign role", async () => {
   );
   render(<CampaignMembersPanel campaignId="world" />);
   fireEvent.change(await screen.findByLabelText(/choose a friend/i), { target: { value: "rin@example.com" } });
-  fireEvent.change(screen.getByLabelText(/^role$/i), { target: { value: "viewer" } });
   fireEvent.click(screen.getByRole("button", { name: /send invitation/i }));
   expect(await screen.findByText(/invitation created/i)).toBeTruthy();
-  expect(received).toEqual({ email: "rin@example.com", role: "viewer" });
+  expect(received).toEqual({ email: "rin@example.com", role: "player" });
 });
 
 it("registers an account", async () => {
@@ -92,7 +92,7 @@ it("does not report a join when accepting an invitation fails", async () => {
   const onJoined = vi.fn();
   server.use(
     http.get("*/v1/invitations", () => HttpResponse.json({ data: [
-      { id: "invite", campaignName: "Moonfall", sender_name: "Rin", role: "viewer" },
+      { id: "invite", campaignName: "Moonfall", sender_name: "Rin", role: "player" },
     ] })),
     http.post("*/v1/invitations/invite/accept", () => HttpResponse.json({ error: { message: "Invitation not found or expired." } }, { status: 404 })),
   );
@@ -115,11 +115,9 @@ it("only offers accepted friends and preserves invitation details after failure"
   render(<CampaignMembersPanel campaignId="world" />);
   fireEvent.change(await screen.findByLabelText(/choose a friend/i), { target: { value: "rin@example.com" } });
   expect(screen.queryByRole("option", { name: "Pending" })).toBeNull();
-  fireEvent.change(screen.getByLabelText(/^role$/i), { target: { value: "viewer" } });
   fireEvent.click(screen.getByRole("button", { name: /send invitation/i }));
   await screen.findByText(/an invitation is already pending/i);
   expect((screen.getByLabelText(/^email$/i) as HTMLInputElement).value).toBe("rin@example.com");
-  expect((screen.getByLabelText(/^role$/i) as HTMLSelectElement).value).toBe("viewer");
   expect(screen.queryByText(/invitation created/i)).toBeNull();
 });
 
@@ -130,7 +128,7 @@ it("refreshes the roster after removing a member and revoking an invitation", as
     http.get("*/v1/campaigns/world/members", () => HttpResponse.json({ data: {
       members: [
         { id: "owner", name: "Owner", email: "owner@example.com", role: "owner" },
-        ...(removed ? [] : [{ id: "peer", name: "Rin", email: "rin@example.com", role: "viewer" }]),
+        ...(removed ? [] : [{ id: "peer", name: "Rin", email: "rin@example.com", role: "player" }]),
       ],
       invitations: revoked ? [] : [{ id: "invite", email: "new@example.com", role: "player" }],
     } })),
@@ -146,4 +144,132 @@ it("refreshes the roster after removing a member and revoking an invitation", as
   fireEvent.click(screen.getByRole("button", { name: /revoke/i }));
   await screen.findByText("Invitation revoked.");
   expect(screen.queryByText("new@example.com")).toBeNull();
+});
+
+it("shares an owned campaign directly from its dashboard card", async () => {
+  const prototype = HTMLDialogElement.prototype;
+  const show = Object.getOwnPropertyDescriptor(prototype, "showModal");
+  const close = Object.getOwnPropertyDescriptor(prototype, "close");
+  Object.defineProperty(prototype, "showModal", { configurable: true, value: function (this: HTMLDialogElement) { this.setAttribute("open", ""); } });
+  Object.defineProperty(prototype, "close", { configurable: true, value: function (this: HTMLDialogElement) { this.removeAttribute("open"); } });
+  const openCampaign = vi.fn();
+  let invited: unknown;
+  server.use(
+    http.get("*/v1/campaigns", () => HttpResponse.json({ data: [{ id: "owned", title: "Owned", subtitle: "Your worlds", campaigns: [
+      { campaignId: "world", name: "Moonfall", role: "owner", status: "planning", description: "A world", lastSessionNumber: 0, players: [{ id: "rin", name: "Rin" }] },
+      { campaignId: "shared", name: "Shared world", role: "player", status: "active", description: "Another world", lastSessionNumber: 1 },
+    ] }] })),
+    http.post("*/v1/campaigns/world/invitations", async ({ request }) => { invited = await request.json(); return HttpResponse.json({ data: null }); }),
+  );
+  try {
+    render(<CampaignDashboardPage account={{ id: "me", name: "GM", email: "gm@example.com" }} onAccountUpdated={() => {}} onOpenCampaign={openCampaign} onLogout={() => {}} provider="demo" onManageProvider={() => {}} />);
+    await screen.findByRole("button", { name: "Share Moonfall" });
+    expect(screen.getByText("1 player")).toBeTruthy();
+    expect(screen.getByText("Rin")).toBeTruthy();
+    expect(screen.getByText("No players yet")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Share Moonfall" }));
+    expect(screen.queryByRole("button", { name: "Share Shared world" })).toBeNull();
+    expect(screen.getByRole("dialog", { name: "Share Moonfall" })).toBeTruthy();
+    expect(openCampaign).not.toHaveBeenCalled();
+    fireEvent.change(await screen.findByLabelText(/^email$/i), { target: { value: "friend@example.com" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send invitation" }));
+    await screen.findByText(/invitation created/i);
+    expect(invited).toEqual({ email: "friend@example.com", role: "player" });
+    fireEvent.click(screen.getByRole("button", { name: "Close sharing" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+  } finally {
+    cleanup();
+    if (show) Object.defineProperty(prototype, "showModal", show); else Reflect.deleteProperty(prototype, "showModal");
+    if (close) Object.defineProperty(prototype, "close", close); else Reflect.deleteProperty(prototype, "close");
+  }
+});
+
+it("requests managed password recovery without requiring a password", async () => {
+  let email: unknown;
+  server.use(
+    http.get("*/auth/config", () => HttpResponse.json({ data: { googleEnabled: true, provider: "firebase" } })),
+    http.post("*/v1/auth/forgot-password", async ({ request }) => {
+      email = await request.json();
+      return HttpResponse.json({ data: { message: "If an account exists for that email, a password reset link has been sent." } });
+    }),
+  );
+  const signIn = vi.fn();
+  render(<LoginPage onSignIn={signIn} />);
+  await screen.findByRole("button", { name: "Forgot your password?" });
+  expect(screen.queryByRole("button", { name: "Resend verification email" })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Forgot your password?" }));
+  expect(screen.queryByLabelText(/^password$/i)).toBeNull();
+  fireEvent.change(screen.getByLabelText(/email address/i), { target: { value: "gm@example.com" } });
+  fireEvent.click(screen.getByRole("button", { name: "Send reset link" }));
+  await screen.findByText(/If an account exists/);
+  expect(email).toEqual({ email: "gm@example.com" });
+  expect(signIn).not.toHaveBeenCalled();
+});
+
+it("requires email verification after Firebase signup instead of opening campaigns", async () => {
+  server.use(
+    http.get("*/auth/config", () => HttpResponse.json({ data: { googleEnabled: true, provider: "firebase" } })),
+    http.post("*/v1/auth/register", () => HttpResponse.json({ data: { verificationRequired: true, message: "Check your inbox to verify your email, then sign in." } })),
+    http.post("*/v1/auth/resend-verification", () => HttpResponse.json({ data: { message: "If the details are correct, a verification email has been sent." } })),
+  );
+  const signIn = vi.fn();
+  render(<LoginPage onSignIn={signIn} />);
+  fireEvent.click(screen.getByRole("button", { name: /New here/ }));
+  fireEvent.change(screen.getByLabelText(/display name/i), { target: { value: "GM" } });
+  fireEvent.change(screen.getByLabelText(/email address/i), { target: { value: "gm@example.com" } });
+  fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: "strong-test-password" } });
+  fireEvent.click(screen.getByRole("button", { name: "Create account" }));
+  await screen.findByText(/Check your inbox to verify/);
+  expect(signIn).not.toHaveBeenCalled();
+  fireEvent.click(await screen.findByRole("button", { name: "Resend verification email" }));
+  await screen.findByText(/If the details are correct/);
+});
+
+it("offers resend only after an unverified sign-in and hides it when the email changes", async () => {
+  server.use(
+    http.get("*/auth/config", () => HttpResponse.json({ data: { googleEnabled: true, provider: "firebase" } })),
+    http.post("*/v1/auth/login", () => HttpResponse.json({ error: { code: "email_verification_required", message: "Verify your email before signing in." } }, { status: 403 })),
+  );
+  render(<LoginPage onSignIn={() => {}} />);
+  await screen.findByRole("button", { name: "Forgot your password?" });
+  expect(screen.queryByRole("button", { name: "Resend verification email" })).toBeNull();
+  fireEvent.change(screen.getByLabelText(/email address/i), { target: { value: "gm@example.com" } });
+  fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: "strong-test-password" } });
+  fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+  await screen.findByRole("button", { name: "Resend verification email" });
+  fireEvent.change(screen.getByLabelText(/email address/i), { target: { value: "other@example.com" } });
+  expect(screen.queryByRole("button", { name: "Resend verification email" })).toBeNull();
+});
+
+it("applies the 12-character rule to signup, not existing-password sign-in", () => {
+  render(<LoginPage onSignIn={() => {}} />);
+  expect(screen.getByLabelText(/^password$/i).hasAttribute("minlength")).toBe(false);
+  fireEvent.click(screen.getByRole("button", { name: /New here/ }));
+  expect(screen.getByLabelText(/^password$/i).getAttribute("minlength")).toBe("12");
+});
+
+it("requires confirmation before transferring ownership to an accepted friend", async () => {
+  const transferred = vi.fn();
+  let received: unknown;
+  server.use(
+    http.get("*/v1/friends", () => HttpResponse.json({ data: [
+      { id: "friend", user: { id: "rin", name: "Rin", email: "rin@example.com" }, status: "accepted", incoming: false },
+      { id: "pending", user: { id: "other", name: "Pending friend", email: "other@example.com" }, status: "pending", incoming: false },
+    ] })),
+    http.post("*/v1/campaigns/world/transfer-ownership", async ({ request }) => { received = await request.json(); return HttpResponse.json({ data: { ownerId: "rin", previousOwnerRole: "player" } }); }),
+  );
+  render(<CampaignMembersPanel campaignId="world" onTransferred={transferred} />);
+  const select = await screen.findByLabelText("New owner");
+  expect(screen.queryByRole("option", { name: "Pending friend" })).toBeNull();
+  fireEvent.change(select, { target: { value: "rin" } });
+  fireEvent.click(screen.getByRole("button", { name: "Transfer ownership" }));
+  expect(screen.getByRole("alert").textContent).toMatch(/private notes and session prep/);
+  expect(received).toBeUndefined();
+  fireEvent.click(screen.getByRole("button", { name: "Cancel transfer" }));
+  expect(screen.queryByRole("button", { name: "Confirm transfer" })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Transfer ownership" }));
+  fireEvent.click(screen.getByRole("button", { name: "Confirm transfer" }));
+  await screen.findByText(/Ownership transferred/);
+  expect(received).toEqual({ friendId: "rin" });
+  expect(transferred).toHaveBeenCalledOnce();
 });

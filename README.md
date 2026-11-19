@@ -144,6 +144,13 @@ For the in-app private-beta experience, see [BYOK onboarding](docs/BYOK_ONBOARDI
 It explains the session-only OpenAI key flow, Gemini's current status, and why a
 future hosted-AI subscription needs hard usage limits.
 
+## Managed authentication
+
+Firebase Authentication adds email verification and password recovery while keeping
+Google sign-in and existing campaign accounts. See [Firebase setup and migration](docs/FIREBASE_AUTH.md).
+Activation requires Firebase project configuration and the explicit account migration.
+`AUTH_PROVIDER=local` remains available for offline development.
+
 ## Google Sign-In
 
 Accounts are required for campaign access. Email/password sign-in works by
@@ -193,6 +200,7 @@ unowned demo campaigns remain inaccessible; accounts create their own campaigns.
 | `docs/AI_ARCHITECTURE.md` | AI design: retrieval, prompting, validation, and GM review |
 | `docs/DATA_MODEL.md` | Campaign-memory data model |
 | `docs/KNOWN_LIMITATIONS.md` | Current gaps and scaling limits |
+| [Droplet deployment](docs/DROPLET_DEPLOYMENT.md) | Production configuration, backups, Firebase cutover, and deployment verification |
 | `scripts/` | PostgreSQL backup, restore, and Markdown-to-PDF utilities |
 | `session-notes/` | Example campaign session notes |
 

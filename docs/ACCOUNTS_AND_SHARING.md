@@ -17,7 +17,7 @@ existing account's email. The recipient can accept or decline; senders can cance
 pending requests, and either party can remove an accepted friendship.
 
 Owners use **Campaign Settings → Owner & members** to invite an accepted friend
-or any email address as a player or viewer. Invitations last seven days, can be
+or any email address as a player. Invitations last seven days, can be
 revoked, and remain pending until the recipient accepts. People without accounts
 can register later with the invited email and find the invitation on their
 dashboard. Invitations are in-app: this version does not send email or generate
@@ -27,9 +27,8 @@ public bearer links. Tell the invitee which email address to use.
 | --- | --- |
 | Owner | Full campaign management, private GM notes, AI jobs, canon review, invitations and membership management |
 | Player | Campaign summary, member list and approved canon, read-only |
-| Viewer | Campaign summary, member list and approved canon, read-only |
 
-Player character contribution is future work. Neither player nor viewer can read
+Player character contribution is future work. Players cannot read
 raw notes, worldbuilding inputs, pending proposals, prep, exports or job history.
 Owners cannot be removed or assigned through invitations. Ownership transfer is
 not exposed in this version.
@@ -69,8 +68,9 @@ behind TLS termination set `SESSION_COOKIE_SECURE=true` on the API service to fo
 Secure cookies. Browser writes check Origin and Fetch Metadata, and JSON write
 endpoints require `application/json`.
 
-Email/password registration does not verify email and forgotten-password recovery
-is not implemented. Google OAuth accepts verified emails, links existing accounts
+In local development mode, email/password registration does not verify email and
+forgotten-password recovery is unavailable. Firebase mode adds both; see
+[FIREBASE_AUTH.md](FIREBASE_AUTH.md). Google OAuth accepts verified emails, links existing accounts
 with the same verified email only while signed into that account, and persists the provider subject in `google_identities`.
 Both sign-in methods issue the same revocable `session_smith` account cookie.
 Google-only users can edit their display name; changing credentials requires a
@@ -90,3 +90,13 @@ registration, expiry, revocation, membership removal and forbidden campaign, job
 and proposal access. It runs in development memory mode or against a migrated
 PostgreSQL database specified by `DATABASE_URL`. Frontend interaction tests cover
 registration, incoming requests, invitations, and choosing friend/role combinations.
+
+## Transfer campaign ownership
+
+Owners can use the Share dialog or campaign Settings to transfer ownership to an
+accepted friend. The confirmation explains that the new owner receives full GM
+access, including private notes and session prep. The previous owner remains a
+player and immediately loses owner-only access. The new owner also takes control
+of pending invitations. The server rechecks ownership and friendship and updates
+both roles in one transaction, preserving exactly one owner. Only the new owner
+can transfer the campaign back.

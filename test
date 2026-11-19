@@ -57,15 +57,16 @@ run_backend() {
     backend.tests.test_api \
     backend.tests.test_accounts \
     backend.tests.test_auth \
+    backend.tests.test_firebase_auth \
+    backend.tests.test_quality_regressions \
     backend.tests.test_schemas \
     backend.tests.test_exporting \
-    backend.tests.test_migrations \
     backend.tests.test_proposals_repository \
     backend.tests.test_worker_pipeline \
     -v
   local unittest_rc=$?
 
-  "$PY" -m pytest backend/evaluation/tests -q
+  "$PY" -m pytest backend/evaluation/tests backend/tests/test_migrations.py -q
   local pytest_rc=$?
 
   backend_rc=$(( unittest_rc != 0 || pytest_rc != 0 ? 1 : 0 ))

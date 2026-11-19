@@ -1,4 +1,6 @@
 /** @vitest-environment jsdom */
+import { http, HttpResponse } from "msw";
+import { server } from "../src/mocks/server";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import App from "../src/App";
@@ -182,4 +184,23 @@ describe("workspace flows (via the /v1 mock API)", () => {
       /\/v1\/campaigns\/campaign_ashes_of_kestrel_vale\/world-export\?format=pdf$/,
     );
   });
+});
+
+it("restores saved prep and persists approved edits across a remount", async () => {
+  let saved = { prepId: "persisted-prep", outline: "Saved campaign outline", status: "draft" };
+  server.use(
+    http.get("*/v1/campaigns/:campaignId/session-prep", () => HttpResponse.json({ data: saved })),
+    http.post("*/v1/campaigns/:campaignId/session-prep/approve", async ({ request }) => {
+      const body = await request.json() as { prepId: string; outline: string };
+      saved = { ...body, status: "approved" }; return HttpResponse.json({ data: saved });
+    }),
+  );
+  openAt(`/campaigns/${GLASS_MOON}/session-prep`);
+  fireEvent.change(await screen.findByDisplayValue("Saved campaign outline"), { target: { value: "Approved edited outline" } });
+  fireEvent.click(screen.getByRole("button", { name: "Save and approve prep" }));
+  await screen.findByText("Session prep saved");
+  cleanup();
+  openAt(`/campaigns/${GLASS_MOON}/session-prep`);
+  expect(await screen.findByDisplayValue("Approved edited outline")).toBeTruthy();
+  cleanup();
 });

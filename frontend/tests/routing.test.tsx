@@ -48,6 +48,14 @@ describe("routing", () => {
     ).toBeTruthy();
   });
 
+  it("shows the unavailable Google option with an explanation", async () => {
+    window.history.pushState({}, "", "/login");
+    render(<App />);
+    const google = await screen.findByRole("button", { name: "Continue with Google" });
+    expect(google.hasAttribute("disabled")).toBe(true);
+    expect(screen.getByText(/Google sign-in is unavailable in this environment/)).toBeTruthy();
+  });
+
   it("offers Google alongside password sign-in when configured", async () => {
     server.use(http.get("*/auth/config", () => HttpResponse.json({ data: { googleEnabled: true } })));
     window.history.pushState({}, "", "/login");
@@ -87,4 +95,23 @@ describe("routing", () => {
       await screen.findByRole("heading", { name: /at a glance/i }),
     ).toBeTruthy();
   });
+});
+
+
+it("opens the party dropdown and dismisses it with Escape or an outside click", async () => {
+  window.history.pushState({}, "", "/campaigns?preview=dashboard");
+  render(<App />);
+  const toggle = await screen.findByRole("button", { name: "Friends & invitations" });
+  fireEvent.click(toggle);
+  expect(await screen.findByRole("region", { name: "Friends and invitations" })).toBeTruthy();
+  expect(toggle.getAttribute("aria-expanded")).toBe("true");
+  fireEvent.keyDown(document, { key: "Escape" });
+  expect(screen.queryByRole("region", { name: "Friends and invitations" })).toBeNull();
+  expect(document.activeElement).toBe(toggle);
+  fireEvent.click(toggle);
+  await screen.findByRole("region", { name: "Friends and invitations" });
+  fireEvent.pointerDown(screen.getByRole("heading", { name: "Your campaigns" }));
+  expect(screen.queryByRole("region", { name: "Friends and invitations" })).toBeNull();
+  expect(toggle.getAttribute("aria-expanded")).toBe("false");
+  cleanup();
 });

@@ -20,7 +20,7 @@ configured to, and nothing is configured to.
   **not actually read anywhere** — it's aspirational documentation, not a real config knob.
 - **Accounts and sharing** — email/password accounts, server-side sessions, friends,
   campaign ownership and invitations are implemented. Email verification, forgotten-password
-  recovery and email delivery are not implemented. Google OAuth is supported. Player/viewer access currently
+  recovery and verification require configured Firebase mode (see `FIREBASE_AUTH.md`). Google OAuth is supported. Player access currently
   includes approved canon only. See [accounts and sharing](ACCOUNTS_AND_SHARING.md).
 - **`world_frameworks` / `characters` / `factions` / `locations` / `story_threads` tables** — no API
   endpoint writes to any of them. World-building only ever produces `world_entries` and

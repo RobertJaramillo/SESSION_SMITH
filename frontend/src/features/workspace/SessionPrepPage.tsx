@@ -14,12 +14,18 @@ export function SessionPrepPage({
   feedback,
   onChange,
   onGenerate,
+  onSave,
+  saving,
+  canSave,
 }: {
   prep: PrepState;
   generating: boolean;
   feedback: BuildFeedback | null;
   onChange: (patch: Partial<PrepState>) => void;
   onGenerate: () => void;
+  onSave: () => void;
+  saving: boolean;
+  canSave: boolean;
 }) {
   return (
     <section>
@@ -76,6 +82,7 @@ export function SessionPrepPage({
         </article>
         <article className="card">
           <h3>Generated outline</h3>
+          {canSave && <button type="button" disabled={saving || generating || !prep.outline.trim()} onClick={onSave}>{saving ? "Saving…" : "Save and approve prep"}</button>}
           {generating ? (
             <p className="empty-state" role="status">
               Pulling approved canon and drafting an outline…

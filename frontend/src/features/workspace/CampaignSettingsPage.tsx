@@ -1,21 +1,21 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { CampaignMembersPanel } from "../../components/CampaignMembersPanel";
-import { updateCampaign } from "../../api/client";
+import { exportCampaign as downloadCampaign, updateCampaign } from "../../api/client";
 import { PageHeader } from "../../components/Layout";
 import {
-  getCampaignWorkspace,
   type CampaignSummary,
 } from "../../domain/worldbuilding";
 
 export function CampaignSettingsPage({
   campaign,
+  onOwnershipTransferred,
 }: {
   campaign: CampaignSummary;
+  onOwnershipTransferred?: () => void;
 }) {
   const [status, setStatus] = useState("");
-  const [confirmingArchive, setConfirmingArchive] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [name, setName] = useState(campaign.name);
-  const [visibility, setVisibility] = useState(campaign.visibility);
   const [model, setModel] = useState(campaign.model);
   const [saving, setSaving] = useState(false);
   const saveSettings = async () => {
@@ -24,7 +24,6 @@ export function CampaignSettingsPage({
     try {
       await updateCampaign(campaign.campaignId, {
         name: name.trim(),
-        visibility,
         model,
       });
       setStatus("Settings saved.");
@@ -34,12 +33,11 @@ export function CampaignSettingsPage({
       setSaving(false);
     }
   };
-  const exportCampaign = () => {
-    const payload = {
-      campaign,
-      workspace: getCampaignWorkspace(campaign),
-      exportedAt: new Date().toISOString(),
-    };
+  const exportCampaign = async () => {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const payload = await downloadCampaign(campaign.campaignId);
     const blob = new Blob([JSON.stringify(payload, null, 2)], {
       type: "application/json",
     });
@@ -51,20 +49,18 @@ export function CampaignSettingsPage({
     anchor.click();
     anchor.remove();
     URL.revokeObjectURL(url);
-    setStatus("Exported campaign JSON to your downloads.");
-  };
-  const confirmArchive = () => {
-    setConfirmingArchive(false);
-    setStatus(`"${campaign.name}" archived. (Prototype: no data was changed.)`);
+      setStatus("Exported saved campaign data to your downloads.");
+    } catch { setStatus("Could not export campaign data. Please try again."); }
+    finally { setExporting(false); }
   };
   return (
     <section>
       <PageHeader
         kicker="Campaign Settings"
-        title="Model, visibility, and data controls"
-        body="Owner controls for this campaign — choose the AI model, set who can see it, and export or archive your data."
+        title="Campaign settings and data controls"
+        body="Manage campaign members, choose the AI model, and export your campaign data."
       />
-      <CampaignMembersPanel campaignId={campaign.campaignId} />
+      <CampaignMembersPanel campaignId={campaign.campaignId} onTransferred={onOwnershipTransferred} />
       <div className="two-column">
         <article className="card">
           <h3>Campaign</h3>
@@ -74,18 +70,6 @@ export function CampaignSettingsPage({
               onChange={(event) => setName(event.target.value)}
               value={name}
             />
-          </label>
-          <label>
-            Default visibility
-            <select
-              onChange={(event) =>
-                setVisibility(event.target.value as CampaignSummary["visibility"])
-              }
-              value={visibility}
-            >
-              <option value="private">Private</option>
-              <option value="shared">Shared with players</option>
-            </select>
           </label>
           <label>
             Model profile
@@ -111,20 +95,13 @@ export function CampaignSettingsPage({
         <article className="card">
           <h3>Data controls</h3>
           <p>
-            Export a JSON snapshot of this campaign, or archive it to hide it
-            from your active list.
+            Export a JSON snapshot of the saved campaign data.
           </p>
           <div className="button-row">
-            <button onClick={exportCampaign} type="button">
+            <button onClick={() => void exportCampaign()} disabled={exporting} type="button">
               Export campaign JSON
             </button>
-            <button
-              className="secondary"
-              onClick={() => setConfirmingArchive(true)}
-              type="button"
-            >
-              Archive campaign
-            </button>
+
           </div>
         </article>
       </div>
@@ -133,73 +110,7 @@ export function CampaignSettingsPage({
           {status}
         </p>
       )}
-      {confirmingArchive && (
-        <ConfirmDialog
-          title="Archive campaign"
-          body={`Archive "${campaign.name}"? You can restore it later.`}
-          confirmLabel="Archive"
-          onCancel={() => setConfirmingArchive(false)}
-          onConfirm={confirmArchive}
-        />
-      )}
-    </section>
-  );
-}
 
-function ConfirmDialog({
-  title,
-  body,
-  confirmLabel,
-  onCancel,
-  onConfirm,
-}: {
-  title: string;
-  body: string;
-  confirmLabel: string;
-  onCancel: () => void;
-  onConfirm: () => void;
-}) {
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onCancel();
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [onCancel]);
-  return (
-    <div className="modal-backdrop" role="presentation">
-      <section
-        aria-labelledby="confirm-dialog-title"
-        aria-modal="true"
-        className="settings-modal setting-update-modal"
-        role="dialog"
-      >
-        <div className="settings-modal-header">
-          <div>
-            <span className="eyebrow">Confirm</span>
-            <h2 id="confirm-dialog-title">{title}</h2>
-          </div>
-          <button
-            aria-label="Close dialog"
-            className="modal-close-button"
-            onClick={onCancel}
-            type="button"
-          >
-            ×
-          </button>
-        </div>
-        <div className="setting-update-body">
-          <p>{body}</p>
-        </div>
-        <div className="settings-confirm-actions">
-          <button className="secondary" onClick={onCancel} type="button">
-            Cancel
-          </button>
-          <button onClick={onConfirm} type="button">
-            {confirmLabel}
-          </button>
-        </div>
-      </section>
-    </div>
+    </section>
   );
 }

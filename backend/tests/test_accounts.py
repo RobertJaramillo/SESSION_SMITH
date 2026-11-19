@@ -50,6 +50,7 @@ class AccountTests(unittest.TestCase):
             await call('GET','/v1/campaigns/campaign_ashes_of_kestrel_vale',cookie=ca,expected=404)
             await call('POST',f'/v1/campaigns/{cid}/invitations',{'email':'not-an-email'},ca,422)
             await call('POST',f'/v1/campaigns/{cid}/invitations',{'email':email_b,'role':'owner'},ca,422)
+            await call('POST',f'/v1/campaigns/{cid}/invitations',{'email':email_b,'role':'viewer'},ca,422)
             await call('POST',f'/v1/campaigns/{cid}/invitations',{'email':email_b,'role':'player'},ca)
             pending,_ = await call('GET','/v1/invitations',cookie=cb)
             inv = pending[0]['id']
@@ -58,6 +59,7 @@ class AccountTests(unittest.TestCase):
             await call('POST',f'/v1/invitations/{inv}/accept',{},cb,404)
             sections,_ = await call('GET','/v1/campaigns',cookie=cb)
             self.assertEqual(sections[1]['campaigns'][0]['role'],'player')
+            self.assertEqual(sections[1]['campaigns'][0]['players'], [{'id':b['id'], 'name':'Bob'}])
             await call('GET',f'/v1/campaigns/{cid}/canon-events',cookie=cb)
             for path in ('workspace','entries','world-export','memory-proposals','session-prep','jobs'):
                 await call('GET',f'/v1/campaigns/{cid}/{path}',cookie=cb,expected=403)
@@ -91,7 +93,7 @@ class AccountTests(unittest.TestCase):
             _,owner = await call('POST','/v1/auth/register',{'name':'Owner','email':f'owner{suffix}@example.com','password':'long-enough-password'})
             campaign,_ = await call('POST','/v1/campaigns',{'name':'Invites'},owner,201)
             cid=campaign['campaignId']; email=f'new{suffix}@example.com'
-            await call('POST',f'/v1/campaigns/{cid}/invitations',{'email':email,'role':'viewer'},owner)
+            await call('POST',f'/v1/campaigns/{cid}/invitations',{'email':email,'role':'player'},owner)
             await call('POST',f'/v1/campaigns/{cid}/invitations',{'email':email},owner,409)
             _,peer = await call('POST','/v1/auth/register',{'name':'New','email':email,'password':'long-enough-password'})
             invites,_=await call('GET','/v1/invitations',cookie=peer)
@@ -163,7 +165,7 @@ class AccountTests(unittest.TestCase):
             cid = campaign['campaignId']
             # Becoming friends alone must not grant campaign access.
             await call('GET', f'/v1/campaigns/{cid}', cookie=cb, expected=404)
-            await call('POST', f'/v1/campaigns/{cid}/invitations', {'email': peer['email'], 'role': 'viewer'}, ca)
+            await call('POST', f'/v1/campaigns/{cid}/invitations', {'email': peer['email'], 'role': 'player'}, ca)
             invitation = (await call('GET', '/v1/invitations', cookie=cb))[0]
             iid = invitation['id']
             self.assertEqual(invitation['campaignName'], 'Shared world')
@@ -174,7 +176,7 @@ class AccountTests(unittest.TestCase):
             await call('GET', f'/v1/campaigns/{cid}', cookie=cb, expected=404)
             await call('POST', f'/v1/invitations/{iid}/accept', {}, cb)
             self.assertEqual(await call('GET', '/v1/invitations', cookie=cb), [])
-            self.assertEqual((await call('GET', f'/v1/campaigns/{cid}', cookie=cb))['role'], 'viewer')
+            self.assertEqual((await call('GET', f'/v1/campaigns/{cid}', cookie=cb))['role'], 'player')
             await call('GET', f'/v1/campaigns/{cid}/canon-events', cookie=cb)
             await call('GET', f'/v1/campaigns/{cid}/workspace', cookie=cb, expected=403)
             await call('POST', f'/v1/campaigns/{cid}/invitations', {'email': owner['email']}, cb, 403)
@@ -193,3 +195,42 @@ class AccountTests(unittest.TestCase):
                 await call('DELETE', f'/v1/friends/{pending["id"]}', cookie=remover)
                 await call('POST', f'/v1/friends/{pending["id"]}/accept', {}, cb, 404)
         self.run_scenario(scenario)
+
+    def test_transfer_to_accepted_friend_preserves_single_owner_and_revokes_old_controls(self):
+        async def scenario():
+            async def call(method, path, body=None, cookie='', expected=200):
+                code, headers, raw = await request_raw(method, path, body=body, headers={'cookie': cookie})
+                response = json.loads(raw)
+                self.assertEqual(code, expected, response)
+                return response.get('data'), headers.get('set-cookie', '').split(';')[0]
+            suffix = uuid4().hex
+            a, ca = await call('POST', '/v1/auth/register', {'name':'Old GM', 'email':'a'+suffix+'@example.com', 'password':'strong-password-a'})
+            b, cb = await call('POST', '/v1/auth/register', {'name':'New GM', 'email':'b'+suffix+'@example.com', 'password':'strong-password-b'})
+            c, cc = await call('POST', '/v1/auth/register', {'name':'Other', 'email':'c'+suffix+'@example.com', 'password':'strong-password-c'})
+            campaign, _ = await call('POST', '/v1/campaigns', {'name':'Transferred world'}, ca, 201)
+            cid = campaign['campaignId']
+            path = f'/v1/campaigns/{cid}/transfer-ownership'
+            await call('POST', path, {'friendId':a['id']}, ca, 400)
+            await call('POST', path, {'friendId':b['id']}, ca, 400)
+            pending, _ = await call('POST', '/v1/friends', {'email':b['email']}, ca)
+            await call('POST', path, {'friendId':b['id']}, ca, 400)
+            await call('POST', f"/v1/friends/{pending['id']}/accept", {}, cb)
+            await call('POST', f'/v1/campaigns/{cid}/invitations', {'email':c['email']}, ca)
+            invitations, _ = await call('GET', '/v1/invitations', cookie=cc)
+            invitation = next(i for i in invitations if i['campaign_id']==cid)
+            await call('POST', path, {'friendId':c['id']}, ca, 400)
+            await call('POST', path, {'friendId':b['id']}, ca)
+            new, _ = await call('GET', f'/v1/campaigns/{cid}', cookie=cb)
+            self.assertEqual(new['owner']['id'], b['id'])
+            self.assertEqual(new['role'], 'owner')
+            old, _ = await call('GET', f'/v1/campaigns/{cid}', cookie=ca)
+            self.assertEqual(old['role'], 'player')
+            await call('PATCH', f'/v1/campaigns/{cid}', {'name':'No longer allowed'}, ca, 403)
+            await call('GET', f'/v1/campaigns/{cid}/entries', cookie=ca, expected=403)
+            await call('POST', path, {'friendId':a['id']}, ca, 403)
+            await call('DELETE', f"/v1/invitations/{invitation['id']}", cookie=ca, expected=404)
+            await call('DELETE', f"/v1/invitations/{invitation['id']}", cookie=cb)
+            await call('PATCH', f'/v1/campaigns/{cid}', {'name':'New owner edited'}, cb)
+            with accounts.transaction() as sql:
+                self.assertEqual(len(sql("SELECT user_id FROM campaign_access WHERE campaign_id=%s AND role='owner'", (cid,)).fetchall()), 1)
+        asyncio.run(scenario())

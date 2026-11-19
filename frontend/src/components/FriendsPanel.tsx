@@ -23,7 +23,7 @@ export function FriendsPanel({ onJoined }: { onJoined: () => void }) {
     finally { setBusy(false); }
   };
   return <section className="card friends-panel social-panel" aria-label="Friends and invitations">
-    <div className="social-panel-heading"><div><span className="eyebrow">Your party</span><h2>Friends & invitations</h2><p>Bring your people to the table.</p></div><span className="social-count">{friends.filter(f => f.status === "accepted").length} {friends.filter(f => f.status === "accepted").length === 1 ? "friend" : "friends"}</span></div>
+    <div className="social-panel-heading"><div><span className="eyebrow">Your party</span><h2>Friends & invitations</h2><p>Bring your people to the table.</p></div><div className="party-heading-actions"><span className="social-count">{friends.filter(f => f.status === "accepted").length} {friends.filter(f => f.status === "accepted").length === 1 ? "friend" : "friends"}</span></div></div>
     <form className="social-composer" onSubmit={event => { event.preventDefault(); void act(async () => { await addFriend(email.trim()); setEmail(""); }, "Friend request sent."); }}>
       <label>Friend’s email<input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="friend@example.com" /></label>
       <button disabled={busy} type="submit">Send friend request</button>

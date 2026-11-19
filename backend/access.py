@@ -2,6 +2,7 @@
 from collections import defaultdict, deque
 import time
 
+from fastapi import HTTPException
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 from backend.accounts import accounts, COOKIE
@@ -30,9 +31,9 @@ class AccountAccessMiddleware:
                 return await reject('Cross-site requests are not allowed.',403)
             if method in ('POST','PATCH') and request.headers.get('content-type','').split(';')[0] != 'application/json':
                 return await reject('Use application/json.',415)
-        if path in ('/v1/healthz','/v1/readyz'):
+        if path in ('/v1/healthz','/v1/readyz') or (path == '/v1/auth/logout' and method == 'POST'):
             return await self.app(scope, receive, send)
-        if path in ('/v1/auth/login','/v1/auth/register') and method == 'POST':
+        if path in ('/v1/auth/login','/v1/auth/register','/v1/auth/forgot-password','/v1/auth/resend-verification') and method == 'POST':
             # Bound password hashing work per source address. Shared rate limiting
             # belongs at the ingress when running multiple API processes.
             now = time.time()
@@ -49,7 +50,10 @@ class AccountAccessMiddleware:
             return await self.app(scope, receive, send)
         # Database I/O and password hashing run outside the event loop.
         from starlette.concurrency import run_in_threadpool
-        user = await run_in_threadpool(accounts.user_for_token, request.cookies.get(COOKIE))
+        try:
+            user = await run_in_threadpool(accounts.user_for_token, request.cookies.get(COOKIE))
+        except HTTPException as error:
+            return await reject(str(error.detail), error.status_code)
         if not user:
             return await reject('Sign in to continue.',401)
         scope.setdefault('state',{})['user'] = user

@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { Dialog } from "./Dialog";
+import { useState } from "react";
 
 export function CreateCampaignDialog({
   onClose,
@@ -10,13 +11,6 @@ export function CreateCampaignDialog({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [onClose]);
   const submit = async () => {
     if (!name.trim() || saving) return;
     setSaving(true);
@@ -27,13 +21,7 @@ export function CreateCampaignDialog({
     }
   };
   return (
-    <div className="modal-backdrop" role="presentation">
-      <section
-        aria-labelledby="create-campaign-title"
-        aria-modal="true"
-        className="settings-modal setting-update-modal"
-        role="dialog"
-      >
+    <Dialog labelledBy="create-campaign-title" onClose={onClose} className="settings-modal setting-update-modal">
         <div className="settings-modal-header">
           <div>
             <span className="eyebrow">New campaign</span>
@@ -78,7 +66,6 @@ export function CreateCampaignDialog({
             {saving ? "Creating…" : "Create campaign"}
           </button>
         </div>
-      </section>
-    </div>
+    </Dialog>
   );
 }

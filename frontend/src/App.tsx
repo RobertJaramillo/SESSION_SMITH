@@ -30,7 +30,7 @@ export default function App() {
 
   const signOut = async () => {
     setSignOutError("");
-    try { await logout(); } catch { setSignOutError("Could not sign out. Please try again."); return; }
+    try { await logout(); } catch { setSignOutError("Signed out on this page. Server sign-out could not be confirmed; please try again when the connection returns."); }
     clearSessionAIProvider();
     setProvider("demo");
     setProviderSetupOpen(false);

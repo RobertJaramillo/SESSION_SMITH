@@ -26,6 +26,8 @@ OAUTH_REDIRECT_URI = os.getenv("OAUTH_REDIRECT_URI", "http://localhost:5173/auth
 OAUTH_CONFIGURED = bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)
 
 SESSION_SECRET = os.getenv("SESSION_SECRET") or secrets.token_urlsafe(32)
+if not os.getenv("SESSION_SECRET") and os.getenv("AUTH_PROVIDER", "local") == "firebase" and OAUTH_CONFIGURED:
+    raise RuntimeError("SESSION_SECRET is required for Google OAuth in Firebase mode.")
 if not os.getenv("SESSION_SECRET"):
     print(
         "WARNING: SESSION_SECRET is not set — using a random key generated for this "
@@ -46,7 +48,22 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.get("/config")
 def config():
-    return {"data": {"googleEnabled": OAUTH_CONFIGURED}}
+    from backend import firebase_auth
+    return {"data": {"googleEnabled": OAUTH_CONFIGURED, "provider": "firebase" if firebase_auth.enabled() else "local"}}
+
+
+@router.get("/connections")
+def connections(request: Request):
+    from backend import firebase_auth
+    user = accounts.user_for_token(request.cookies.get(COOKIE))
+    if not user:
+        raise HTTPException(401, detail="Sign in to continue.")
+    if firebase_auth.enabled():
+        connected = firebase_auth.google_connected(user['id'])
+    else:
+        with accounts.transaction() as sql:
+            connected = sql('SELECT subject FROM google_identities WHERE user_id=%s', (user['id'],)).fetchone() is not None
+    return {"data": {"googleConnected": connected}}
 
 
 @router.get("/google/login")
@@ -56,6 +73,22 @@ async def google_login(request: Request):
             status.HTTP_503_SERVICE_UNAVAILABLE,
             detail={"code": "oauth_not_configured", "message": "GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET are not set."},
         )
+    request.session.pop("firebase_link_uid", None)
+    return await oauth.google.authorize_redirect(request, OAUTH_REDIRECT_URI)
+
+
+@router.get("/google/link")
+async def google_link(request: Request):
+    from backend import firebase_auth
+    if not firebase_auth.enabled() or not OAUTH_CONFIGURED:
+        raise HTTPException(503, detail="Google account linking is not configured.")
+    user = await run_in_threadpool(accounts.user_for_token, request.cookies.get(COOKIE))
+    if not user:
+        raise HTTPException(401, detail="Sign in to continue.")
+    if await run_in_threadpool(firebase_auth.google_connected, user['id']):
+        return RedirectResponse('/')
+    claims = await run_in_threadpool(firebase_auth.recent_session, request)
+    request.session["firebase_link_uid"] = claims["uid"]
     return await oauth.google.authorize_redirect(request, OAUTH_REDIRECT_URI)
 
 
@@ -70,6 +103,9 @@ async def google_callback(request: Request):
             status.HTTP_401_UNAUTHORIZED,
             detail={"code": "google_auth_failed", "message": str(error)},
         ) from error
+    from backend import firebase_auth
+    if firebase_auth.enabled():
+        return await run_in_threadpool(firebase_auth.google_login, token, request)
     userinfo = token.get("userinfo") or {}
     if not userinfo.get("sub") or not userinfo.get("email") or userinfo.get("email_verified") is not True:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Google did not return a verified account email and subject.")

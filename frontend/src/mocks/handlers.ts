@@ -1,10 +1,7 @@
+import { CAMPAIGN_LISTS, buildPrepOutline, extractProposalsFromNote, getCampaignWorkspace } from "./fixtures";
 import { http, HttpResponse } from "msw";
 import {
-  CAMPAIGN_LISTS,
   WORLD_CATEGORIES,
-  buildPrepOutline,
-  extractProposalsFromNote,
-  getCampaignWorkspace,
   type CampaignListSection,
   type CampaignSummary,
 } from "../domain/worldbuilding";
@@ -110,6 +107,7 @@ const store = new Map<string, CampaignState>();
 const jobs = new Map<string, ApiJob>();
 let campaignSections: CampaignListSection[] | null = null;
 
+const savedPreps = new Map<string, { prepId: string; outline: string; status: "draft" | "approved" }>();
 let seq = 0;
 const nextId = (prefix: string) => {
   seq += 1;
@@ -120,6 +118,7 @@ const nextId = (prefix: string) => {
 export function resetStore() {
   mockSignedIn = false;
   store.clear();
+  savedPreps.clear();
   jobs.clear();
   campaignSections = null;
   seq = 0;
@@ -306,7 +305,13 @@ export const handlers = [
     },
   ),
 
-  http.post("*/v1/campaigns/:campaignId/prep-jobs", async ({ request }) => {
+  http.get("*/v1/campaigns/:campaignId/session-prep", ({ params }) => HttpResponse.json({ data: savedPreps.get(String(params.campaignId)) ?? null })),
+  http.post("*/v1/campaigns/:campaignId/session-prep/approve", async ({ params, request }) => {
+    const body = await request.json() as { prepId: string; outline: string };
+    const saved = { ...body, status: "approved" as const }; savedPreps.set(String(params.campaignId), saved);
+    return HttpResponse.json({ data: saved });
+  }),
+  http.post("*/v1/campaigns/:campaignId/prep-jobs", async ({ request, params }) => {
     const body = (await request.json()) as { goal: string; tone: string };
     const jobId = nextId("job");
     const job: ApiJob = {
@@ -323,6 +328,7 @@ export const handlers = [
       job.result = {
         outline: buildPrepOutline({ goal: body.goal, tone: body.tone }),
       };
+      savedPreps.set(String(params.campaignId), { prepId: `prep_${jobId}`, outline: job.result!.outline!.join("\n"), status: "draft" });
     }, 900);
     return HttpResponse.json(
       { data: { jobId, status: "pending" } },

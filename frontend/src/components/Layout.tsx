@@ -1,6 +1,5 @@
 import type {
   CampaignWorkspacePage,
-  WorldCategory,
 } from "../domain/worldbuilding";
 import { campaignWorkspaceNavItems } from "../domain/worldbuilding";
 
@@ -86,25 +85,5 @@ export function StatCard({
       <span>{label}</span>
       <strong>{value}</strong>
     </article>
-  );
-}
-
-export function CategoryPill({
-  category,
-  active,
-  onClick,
-}: {
-  category: WorldCategory;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      className={`category-pill ${active ? "active" : ""}`}
-      onClick={onClick}
-      type="button"
-    >
-      {category.label}
-    </button>
   );
 }

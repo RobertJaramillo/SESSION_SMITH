@@ -13,3 +13,6 @@ var override this for a one-off manual run.
 import os
 
 os.environ.setdefault("LLM_PROVIDER", "demo")
+
+# Authentication tests opt into Firebase with mocks; never inherit live mode.
+os.environ["AUTH_PROVIDER"] = "local"

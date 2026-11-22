@@ -8,7 +8,6 @@ import type {
   ApiJob,
   ApiProposal,
   ApiWorkspaceSummary,
-  CurrentUser,
   ReviewAction,
 } from "./types";
 
@@ -19,8 +18,8 @@ let apiBase = (import.meta.env.VITE_API_BASE as string | undefined) ?? "";
 // Deliberately memory-only. A BYOK credential must never be written to
 // localStorage, sessionStorage, IndexedDB, or the URL. It is sent only to the
 // same-origin backend for an AI job, then disappears when the page reloads or
-// the user logs out. Persistent per-user credentials need real authentication
-// and encrypted server-side storage, which this beta does not have yet.
+// the user logs out. Persistent provider credentials would additionally need
+// encrypted server-side storage, which this beta does not implement.
 let sessionOpenAIKey = "";
 
 export function setSessionOpenAIKey(apiKey: string) {
@@ -33,6 +32,14 @@ export function clearSessionAIProvider() {
 
 export function setApiBase(base: string) {
   apiBase = base;
+}
+
+export class ApiError extends Error {
+  code?: string;
+  constructor(message: string, code?: string) {
+    super(message);
+    this.code = code;
+  }
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -48,29 +55,22 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     headers.set("X-Session-Smith-API-Key", sessionOpenAIKey);
   }
   const response = await fetch(`${apiBase}${path}`, {
-    credentials: "include",
     ...init,
+    credentials: "include",
     headers,
   });
   if (!response.ok) {
-    throw new Error(`Request to ${path} failed with ${response.status}`);
+    const failure = await response.json().catch(() => null);
+    throw new ApiError(failure?.error?.message ?? "The request could not be completed.", failure?.error?.code);
   }
   const body = await response.json();
   return body.data as T;
 }
 
-// Resolves with the signed-in Google account, or rejects (401) if no session
-// cookie is present — App.tsx uses this to decide whether to show the login page.
-export function getCurrentUser() {
-  return request<CurrentUser>("/auth/me");
-}
+export const getAuthConfig = () => request<{ googleEnabled: boolean; provider?: "local" | "firebase" }>("/auth/config");
 
-export function logout() {
-  return fetch(`${apiBase}/auth/logout`, { method: "POST", credentials: "include" });
-}
+export const googleLinkUrl = () => `${apiBase}/auth/google/link`;
 
-// Full-page navigation (not fetch) — Google's consent screen has to be a
-// top-level redirect, not an XHR.
 export function googleLoginUrl() {
   return `${apiBase}/auth/google/login`;
 }
@@ -228,3 +228,34 @@ export async function pollJob(
   }
   throw new Error("Job polling timed out");
 }
+
+export type Account = { id: string; name: string; email: string };
+export type Friendship = { id: string; user: Account; status: "pending" | "accepted"; incoming: boolean };
+export type CampaignInvitation = { id: string; campaignName: string; sender_name: string; role: string };
+export type CampaignMembers = { members: (Account & { role: string })[]; invitations: { id: string; email: string; role: string }[] };
+export const getAccount = () => request<Account>("/v1/auth/me");
+export const authenticate = (register: boolean, input: { email: string; password: string; name?: string }) => request<Account | { verificationRequired: true; message: string }>(`/v1/auth/${register ? "register" : "login"}`, { method: "POST", body: JSON.stringify(input) });
+export const logout = () => request<null>("/v1/auth/logout", { method: "POST", body: "{}" });
+export const listFriends = () => request<Friendship[]>("/v1/friends");
+export const addFriend = (email: string) => request("/v1/friends", { method: "POST", body: JSON.stringify({ email }) });
+export const acceptFriend = (id: string) => request(`/v1/friends/${id}/accept`, { method: "POST", body: "{}" });
+export const removeFriend = (id: string) => request(`/v1/friends/${id}`, { method: "DELETE" });
+export const listInvitations = () => request<CampaignInvitation[]>("/v1/invitations");
+export const acceptInvitation = (id: string) => request(`/v1/invitations/${id}/accept`, { method: "POST", body: "{}" });
+export const declineInvitation = (id: string) => request(`/v1/invitations/${id}`, { method: "DELETE" });
+export const getMembers = (id: string) => request<CampaignMembers>(`/v1/campaigns/${id}/members`);
+export const inviteToCampaign = (id: string, email: string, role: string) => request(`/v1/campaigns/${id}/invitations`, { method: "POST", body: JSON.stringify({ email, role }) });
+export const removeCampaignMember = (id: string, memberId: string) => request(`/v1/campaigns/${id}/members/${memberId}`, { method: "DELETE" });
+export const updateAccount = (patch: { name?: string; email?: string; password?: string; currentPassword?: string }) => request<Account>("/v1/auth/me", { method: "PATCH", body: JSON.stringify(patch) });
+
+export const forgotPassword = (email: string) => request<{ message: string }>("/v1/auth/forgot-password", { method: "POST", body: JSON.stringify({ email }) });
+export const resendVerification = (email: string, password: string) => request<{ message: string }>("/v1/auth/resend-verification", { method: "POST", body: JSON.stringify({ email, password }) });
+
+export const transferCampaignOwnership = (campaignId: string, friendId: string) => request<{ ownerId: string; previousOwnerRole: "player" }>(`/v1/campaigns/${campaignId}/transfer-ownership`, { method: "POST", body: JSON.stringify({ friendId }) });
+
+export type SavedPrep = { prepId: string; outline: string; status: "draft" | "approved" };
+export const getSessionPrep = (campaignId: string) => request<SavedPrep | null>(`/v1/campaigns/${campaignId}/session-prep`);
+export const approveSessionPrep = (campaignId: string, prepId: string, outline: string) => request<SavedPrep>(`/v1/campaigns/${campaignId}/session-prep/approve`, { method: "POST", body: JSON.stringify({ prepId, outline }) });
+export const exportCampaign = (campaignId: string) => request<unknown>(`/v1/campaigns/${campaignId}/export`);
+
+export const getAuthConnections = () => request<{ googleConnected: boolean }>("/auth/connections");

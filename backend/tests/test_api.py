@@ -12,7 +12,17 @@ import unittest
 import backend.app as campaign_api
 from backend.db import postgres_enabled
 from backend.repositories.campaigns import InMemoryCampaignRepository
-from backend.tests._asgi_client import request, request_raw
+from backend.tests._asgi_client import request as anonymous_request, request_raw as anonymous_request_raw
+from backend.accounts import accounts
+import hashlib
+import time
+
+async def request(*args, **kwargs):
+    return await anonymous_request(*args, **kwargs, headers={"cookie":"session_smith=contract-token"})
+
+async def request_raw(*args, **kwargs):
+    return await anonymous_request_raw(*args, **kwargs, headers={"cookie":"session_smith=contract-token"})
+
 from fastapi import HTTPException
 from starlette.requests import Request
 
@@ -70,6 +80,12 @@ class ApiContractTests(unittest.TestCase):
     def setUp(self) -> None:
         campaign_api.store = campaign_api.CampaignStore()
         campaign_api.campaigns = InMemoryCampaignRepository(campaign_api.store)
+        with accounts.transaction() as sql:
+            sql("INSERT INTO app_users(id,email,name,password_hash) VALUES ('contract-user','contract@example.com','GM','unused') ON CONFLICT(id) DO NOTHING")
+            sql("INSERT INTO account_sessions(token_hash,user_id,expires_at) VALUES (%s,'contract-user',%s) ON CONFLICT(token_hash) DO NOTHING",(hashlib.sha256(b'contract-token').hexdigest(),time.time()+3600))
+            for section in campaign_api.store.sections:
+                for campaign in section['campaigns']:
+                    sql("INSERT INTO campaign_access(campaign_id,user_id,role) VALUES (%s,'contract-user','owner') ON CONFLICT(campaign_id,user_id) DO NOTHING",(campaign['campaignId'],))
 
     def test_note_review_and_canon_lifecycle(self) -> None:
         async def scenario() -> None:

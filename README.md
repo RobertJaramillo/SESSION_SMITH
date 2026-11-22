@@ -10,7 +10,8 @@ canon.** Raw notes, pending proposals, and approved canon are kept separate.
 
 ## What you can do
 
-- Create and organize campaigns in a GM-facing workspace.
+- Register, sign in, and organize campaigns with explicit ownership.
+- Add friends and invite players or viewers to your campaigns.
 - Build a world across 18 categories, then review and seal it.
 - Submit session notes and receive proposed canon updates.
 - Approve, edit, or reject proposals before they affect campaign memory.
@@ -82,12 +83,12 @@ live AI calls. Some PostgreSQL-backed backend tests self-skip unless
 
 ## Local development without the full stack
 
-For UI-only work, run the frontend with its default browser mocks:
+For UI-only work, explicitly enable browser mocks (these do not provide real accounts or sharing):
 
 ```bash
 cd frontend
 npm install
-npm run dev -- --port 5173
+VITE_USE_MOCKS=true npm run dev -- --port 5173
 ```
 
 For the FastAPI backend's in-memory development mode, use the virtual
@@ -116,6 +117,15 @@ cd frontend
 VITE_USE_MOCKS=false npm run dev -- --port 5173
 ```
 
+## Accounts and sharing
+
+Create an account from the sign-in page. Use **Friends & invitations** on the
+dashboard for friend requests and incoming campaign invitations. Campaign owners
+invite people and manage members in **Campaign Settings**. Invitations are delivered
+in-app, including to people who register later with the invited email; no invitation
+emails are sent. See [accounts and sharing](docs/ACCOUNTS_AND_SHARING.md) for roles,
+persistence, and migrating existing campaigns.
+
 ## AI providers
 
 The default `LLM_PROVIDER=demo` mode is offline and deterministic. It is useful
@@ -134,14 +144,27 @@ For the in-app private-beta experience, see [BYOK onboarding](docs/BYOK_ONBOARDI
 It explains the session-only OpenAI key flow, Gemini's current status, and why a
 future hosted-AI subscription needs hard usage limits.
 
+## Managed authentication
+
+Firebase Authentication adds email verification and password recovery while keeping
+Google sign-in and existing campaign accounts. See [Firebase setup and migration](docs/FIREBASE_AUTH.md).
+Activation requires Firebase project configuration and the explicit account migration.
+`AUTH_PROVIDER=local` remains available for offline development.
+
 ## Google Sign-In
 
-By default the app has no login gate (matches the single-tenant prototype
-described in `docs/DATA_MODEL.md`). Setting `GOOGLE_CLIENT_ID` and
-`GOOGLE_CLIENT_SECRET` turns on real Google OAuth: `/login` gets a working
-"Continue with Google" link, `backend/auth.py` issues a signed session
-cookie, and every `/v1/*` request then requires that session. There is still
-no per-user data — everyone who signs in shares the one workspace.
+Accounts are required for campaign access. Email/password sign-in works by
+default; configuring `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` also enables
+"Continue with Google". Both methods use the same persistent account and session,
+so campaign ownership, friends and invitations work with either sign-in method.
+To link an existing email/password account, sign in with its password and use
+"Connect Google account" in Settings with the same verified Google email. Subsequent
+Google sign-ins use Google's stable subject ID, preserving ownership even when a
+Google profile email changes. Google-only accounts have no usable password;
+password recovery and password setup for these accounts are not yet available.
+Apply migrations (including `007_accounts_and_sharing.sql` and
+`008_google_identities.sql`) before starting an existing database. Existing
+unowned demo campaigns remain inaccessible; accounts create their own campaigns.
 
 1. In [Google Cloud Console](https://console.cloud.google.com/apis/credentials),
    create (or pick) a project, then **Create credentials → OAuth client ID**.
@@ -162,7 +185,7 @@ no per-user data — everyone who signs in shares the one workspace.
 
    `SESSION_SECRET` signs the session cookie — generate one with
    `openssl rand -hex 32`. If you leave it unset the app still works, but a
-   restart invalidates every signed-in session.
+   restart invalidates pending OAuth handshakes. Account sessions remain in the database.
 5. Restart the stack (`./run`, or restart `uvicorn` for manual dev). Signing
    in with a Google account that isn't an approved test user (while the
    consent screen is unpublished) will be rejected by Google, not by this app.
@@ -177,6 +200,7 @@ no per-user data — everyone who signs in shares the one workspace.
 | `docs/AI_ARCHITECTURE.md` | AI design: retrieval, prompting, validation, and GM review |
 | `docs/DATA_MODEL.md` | Campaign-memory data model |
 | `docs/KNOWN_LIMITATIONS.md` | Current gaps and scaling limits |
+| [Droplet deployment](docs/DROPLET_DEPLOYMENT.md) | Production configuration, backups, Firebase cutover, and deployment verification |
 | `scripts/` | PostgreSQL backup, restore, and Markdown-to-PDF utilities |
 | `session-notes/` | Example campaign session notes |
 

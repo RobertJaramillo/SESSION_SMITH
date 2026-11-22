@@ -32,3 +32,8 @@ pypdf>=5.0                   # extracts text from externally supplied PDF world 
 # --- Dev / test (optional but recommended) ---
 pytest>=8.0
 # ruff>=0.6                   # linter/formatter
+
+# Managed identity, verification, reset emails and revocable session cookies
+firebase-admin>=6.5,<8
+
+psycopg-pool>=3.2,<4

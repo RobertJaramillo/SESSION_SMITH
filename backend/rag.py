@@ -126,16 +126,6 @@ def _lexical_score(query_tokens: list[str], doc_tokens: list[str]) -> float:
     return score / math.sqrt(len(doc_tokens))
 
 
-def _epoch(dt) -> Optional[float]:
-    """Best-effort timestamp -> float seconds; None if unknown (sorts oldest)."""
-    if dt is None:
-        return None
-    try:
-        return dt.timestamp()
-    except (AttributeError, ValueError, OverflowError):
-        return None
-
-
 # =============================================================================
 # CampaignCorpus — the loaded source material retrieval draws from
 # =============================================================================

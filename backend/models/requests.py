@@ -10,12 +10,20 @@ from __future__ import annotations
 from enum import Enum
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class CampaignCreate(BaseModel):
     name: str = Field(min_length=1, max_length=160)
     description: str = Field(default="", max_length=2_000)
+
+
+    @field_validator('name')
+    @classmethod
+    def name_not_blank(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError('Enter a campaign name.')
+        return value.strip()
 
 
 class CampaignPatch(BaseModel):

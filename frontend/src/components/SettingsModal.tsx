@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { Dialog } from "./Dialog";
+import { useEffect, useState } from "react";
+import { getAuthConfig, getAuthConnections, googleLinkUrl, googleLoginUrl, forgotPassword, updateAccount, type Account } from "../api/client";
 import type { AIProvider } from "../types/providers";
 
 type EditableSettingId = "name" | "email" | "password";
@@ -18,6 +20,7 @@ export function SettingsModal({
   onClose,
   provider,
   onManageProvider,
+  onAccountUpdated,
 }: {
   accountEmail: string;
   accountName: string;
@@ -25,7 +28,21 @@ export function SettingsModal({
   onClose: () => void;
   provider: AIProvider;
   onManageProvider: () => void;
+  onAccountUpdated: (account: Account) => void;
 }) {
+  const [managed, setManaged] = useState(false);
+  const [recoveryNotice, setRecoveryNotice] = useState("");
+  const [sendingReset, setSendingReset] = useState(false);
+  const [googleEnabled, setGoogleEnabled] = useState(false);
+  const [googleConnected, setGoogleConnected] = useState<boolean | null>(null);
+  const [connectionError, setConnectionError] = useState(false);
+  useEffect(() => {
+    let active = true;
+    getAuthConfig().then((config) => { if (active) { setGoogleEnabled(config.googleEnabled); setManaged(config.provider === "firebase"); } }).catch(() => {});
+    getAuthConnections().then((connections) => { if (active) setGoogleConnected(connections.googleConnected); })
+      .catch(() => { if (active) setConnectionError(true); });
+    return () => { active = false; };
+  }, []);
   const [settingValues, setSettingValues] = useState<
     Record<EditableSettingId, string>
   >({ name: accountName, email: accountEmail, password: "Password unchanged" });
@@ -52,20 +69,22 @@ export function SettingsModal({
       id: "email",
       label: "Email",
       value: settingValues.email,
-      helper: "Primary address used for account notices and sign in.",
-      editable: true,
+      helper: managed ? "Verified sign-in address. Email changes are not available yet." : "Primary address used for account notices and sign in.",
+      editable: !managed,
       inputType: "email",
     },
     {
       id: "password",
       label: "Password reset",
       value: settingValues.password,
-      helper: "Enter and confirm a new password before saving.",
-      editable: true,
+      helper: managed ? "We’ll email you a secure link to choose a new password." : "Enter and confirm a new password before saving.",
+      editable: !managed,
       inputType: "password",
     },
   ];
-  const saveSetting = (settingId: EditableSettingId, value: string) => {
+  const saveSetting = async (settingId: EditableSettingId, value: string, currentPassword: string) => {
+    const account = await updateAccount({ [settingId]: value, currentPassword });
+    onAccountUpdated(account);
     setSettingValues((current) => ({
       ...current,
       [settingId]: settingId === "password" ? "Password updated" : value,
@@ -74,17 +93,12 @@ export function SettingsModal({
   };
 
   return (
-    <div className="modal-backdrop" role="presentation">
-      <section
-        aria-labelledby="settings-modal-title"
-        aria-modal="true"
-        className="settings-modal"
-        role="dialog"
-      >
+    <Dialog labelledBy="settings-modal-title" onClose={onClose}>
         <div className="settings-modal-header">
           <div>
             <span className="eyebrow">Account settings</span>
             <h2 id="settings-modal-title">Settings</h2>
+
           </div>
           <button
             aria-label="Close settings"
@@ -119,6 +133,16 @@ export function SettingsModal({
               </button>
             </div>
           </article>
+          {googleEnabled && <article className="settings-option">
+            <div>
+              <span>Google sign-in</span>
+              <strong>{googleConnected ? "Google account connected" : "Connect your Google account"}</strong>
+              <p>{googleConnected ? "You can sign in using Google." : connectionError ? "Could not check your connected accounts. Reopen settings to try again." : googleConnected === null ? "Checking connection…" : "Use Google to sign in with the same email address."}</p>
+            </div>
+            <div className="settings-option-actions">
+              {googleConnected ? <span className="settings-readonly-badge">Connected</span> : googleConnected === false ? <a className="button-link secondary" href={managed ? googleLinkUrl() : googleLoginUrl()}>Connect Google</a> : null}
+            </div>
+          </article>}
           {settingsRows.map((row) => (
             <article className="settings-option" key={row.id}>
               <div>
@@ -126,7 +150,17 @@ export function SettingsModal({
                 <strong>{row.value}</strong>
                 <p>{row.helper}</p>
               </div>
-              {row.editable ? (
+              {row.id === "password" && managed ? (
+                <div className="settings-option-actions">
+                  <button type="button" disabled={sendingReset} onClick={async () => {
+                    setSendingReset(true);
+                    setRecoveryNotice("");
+                    try { setRecoveryNotice((await forgotPassword(accountEmail)).message); }
+                    catch (error) { setRecoveryNotice(error instanceof Error ? error.message : "Could not send reset email."); }
+                    finally { setSendingReset(false); }
+                  }}>{sendingReset ? "Sending…" : "Send reset email"}</button>
+                </div>
+              ) : row.editable ? (
                 <div
                   className="settings-option-actions"
                   aria-label={`${row.label} actions`}
@@ -136,24 +170,24 @@ export function SettingsModal({
                   </button>
                 </div>
               ) : (
-                <span className="settings-readonly-badge">Current plan</span>
+                <span className="settings-readonly-badge">{row.id === "tier" ? "Current plan" : "Read only"}</span>
               )}
             </article>
           ))}
+          {recoveryNotice && <p className="settings-feedback" role="status">{recoveryNotice}</p>}
         </div>
-      </section>
       {editingSetting && editingSetting.id !== "tier" && (
         <SettingUpdateModal
           currentValue={editingSetting.value}
           inputType={editingSetting.inputType ?? "text"}
           label={editingSetting.label}
           onClose={() => setEditingSetting(null)}
-          onSave={(value) =>
-            saveSetting(editingSetting.id as EditableSettingId, value)
+          onSave={(value, currentPassword) =>
+            saveSetting(editingSetting.id as EditableSettingId, value, currentPassword)
           }
         />
       )}
-    </div>
+    </Dialog>
   );
 }
 
@@ -168,20 +202,17 @@ function SettingUpdateModal({
   inputType: "text" | "email" | "password";
   label: string;
   onClose: () => void;
-  onSave: (value: string) => void;
+  onSave: (value: string, currentPassword: string) => Promise<void>;
 }) {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
   const [newValue, setNewValue] = useState("");
   const [confirmValue, setConfirmValue] = useState("");
   const valuesMatch =
     newValue.length > 0 && confirmValue.length > 0 && newValue === confirmValue;
   return (
-    <div className="modal-backdrop nested-modal-backdrop" role="presentation">
-      <section
-        aria-labelledby="setting-update-title"
-        aria-modal="true"
-        className="settings-modal setting-update-modal"
-        role="dialog"
-      >
+    <Dialog labelledBy="setting-update-title" onClose={onClose} className="settings-modal setting-update-modal" overlayClassName="nested-modal-backdrop">
         <div className="settings-modal-header">
           <div>
             <span className="eyebrow">Update setting</span>
@@ -203,6 +234,7 @@ function SettingUpdateModal({
               {inputType === "password" ? "Hidden for security" : currentValue}
             </strong>
           </p>
+          {inputType !== "text" && <label>Current password<input type="password" autoComplete="current-password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} /></label>}
           <label>
             New {label}
             <input
@@ -223,6 +255,8 @@ function SettingUpdateModal({
               value={confirmValue}
             />
           </label>
+          {error && <p role="alert">{error}</p>}
+          {inputType === "password" && <p>Use at least 12 characters.</p>}
           {!valuesMatch && (newValue.length > 0 || confirmValue.length > 0) && (
             <p className="settings-validation-message">
               Both fields must be filled in and match before Save is enabled.
@@ -231,14 +265,18 @@ function SettingUpdateModal({
         </div>
         <div className="settings-confirm-actions">
           <button
-            disabled={!valuesMatch}
-            onClick={() => onSave(newValue)}
+            disabled={!valuesMatch || busy || (inputType !== "text" && !currentPassword) || (inputType === "password" && newValue.length < 12)}
+            onClick={async () => {
+              setBusy(true); setError("");
+              try { await onSave(newValue,currentPassword); }
+              catch (error) { setError(error instanceof Error ? error.message : "Could not save account settings."); }
+              finally { setBusy(false); }
+            }}
             type="button"
           >
             Save
           </button>
         </div>
-      </section>
-    </div>
+    </Dialog>
   );
 }

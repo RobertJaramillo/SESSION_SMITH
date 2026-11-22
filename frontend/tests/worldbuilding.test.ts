@@ -1,6 +1,6 @@
+import { CAMPAIGN_LISTS } from "../src/mocks/fixtures";
 import { describe, expect, it } from "vitest";
 import {
-  CAMPAIGN_LISTS,
   WORLD_CATEGORIES,
   buildSessionEntry,
   campaignWorkspaceNavItems,

@@ -1,7 +1,6 @@
 import { PageHeader, StatCard } from "../../components/Layout";
 import {
   WORLD_CATEGORIES,
-  getCampaignWorkspace,
   type CampaignSummary,
   type CampaignWorkspacePage,
 } from "../../domain/worldbuilding";
@@ -16,10 +15,9 @@ export function CampaignOverviewPage({
   workspace: ApiWorkspaceSummary | null;
   onNavigate: (page: CampaignWorkspacePage) => void;
 }) {
-  const seed = getCampaignWorkspace(campaign);
-  const sessionDocCount = workspace?.sessionDocCount ?? seed.sessionDocCount;
+  const sessionDocCount = workspace?.sessionDocCount ?? 0;
   const proposalsWaiting = workspace?.proposalsWaiting ?? 0;
-  const recentActivity = workspace?.recentActivity ?? seed.recentActivity;
+  const recentActivity = workspace?.recentActivity ?? [];
 
   return (
     <section>

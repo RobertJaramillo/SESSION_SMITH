@@ -13,7 +13,6 @@ canon.
 from __future__ import annotations
 
 import os
-import re
 from datetime import datetime, timezone
 from threading import Lock
 from typing import Any
@@ -21,11 +20,13 @@ from uuid import uuid4
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Query, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware import Middleware
 from starlette.middleware.sessions import SessionMiddleware
+from backend.demo_workflows import _proposal_from_notes, _inmemory_build_proposals
 import backend.worker as worker
-from backend.auth import SESSION_SECRET, AuthGateMiddleware
+from backend.auth import SESSION_SECRET
 from backend.auth import router as auth_router
+from backend.accounts import accounts, router as accounts_router
+from backend.access import AccountAccessMiddleware
 from backend.db import postgres_enabled
 from backend.llm_provider import get_provider
 from backend.models.requests import CampaignCreate, CampaignPatch, EntryCreate, NotesCreate, PrepJobCreate, ProposalReview, SessionPrepApprove, WorldBuildCreate
@@ -152,25 +153,22 @@ def _configure_llm_provider():
     return get_provider(provider_name)
 
 
+from backend.request_logging import configure_request_logging
+configure_request_logging()
+
 _llm_provider = _configure_llm_provider()
-app = FastAPI(
-    title="AI Campaign Orchestration API",
-    version="0.1.0-dev",
-    # Order matters: outermost first. CORS wraps everything (including the
-    # 401s AuthGateMiddleware short-circuits with) so the browser can read
-    # them; SessionMiddleware must run before AuthGateMiddleware reads
-    # request.session.
-    middleware=[
-        Middleware(
-            CORSMiddleware,
-            allow_origins=["http://127.0.0.1:5173", "http://localhost:5173"],
-            allow_credentials=True,
-            allow_methods=["*"],
-            allow_headers=["*"],
-        ),
-        Middleware(SessionMiddleware, secret_key=SESSION_SECRET, same_site="lax"),
-        Middleware(AuthGateMiddleware),
-    ],
+app = FastAPI(title="AI Campaign Orchestration API", version="0.1.0-dev")
+app.include_router(accounts_router)
+app.add_middleware(AccountAccessMiddleware)
+# Signed cookies hold OAuth state only; account_sessions authenticates all users.
+app.add_middleware(SessionMiddleware, secret_key=SESSION_SECRET, same_site="lax",
+                   https_only=os.getenv("SESSION_COOKIE_SECURE", "").lower() == "true")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://127.0.0.1:5173", "http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 app.include_router(auth_router)
 
@@ -244,22 +242,31 @@ def readyz() -> dict[str, str]:
 
 
 @app.get("/v1/campaigns")
-def list_campaigns() -> Any:
-    with store.lock:
-        return data(campaigns.list_sections())
+def list_campaigns(request: Request) -> Any:
+    user_id = request.state.user['id']
+    owned, shared = [], []
+    for campaign in campaigns.list_for_user(user_id):
+        (owned if campaign['role'] == 'owner' else shared).append(campaign)
+    return data([
+        {'id':'owned','title':'Owned','subtitle':'Campaigns you own and manage.','campaigns':owned},
+        {'id':'shared','title':'Shared','subtitle':'Campaigns you have joined.','campaigns':shared},
+    ])
 
 
 @app.post("/v1/campaigns")
-def create_campaign(payload: CampaignCreate) -> Any:
+def create_campaign(payload: CampaignCreate, request: Request) -> Any:
     with store.lock:
-        campaign = campaigns.create(name=payload.name.strip(), description=payload.description.strip())
-    return data(campaign, status.HTTP_201_CREATED)
+        campaign = campaigns.create(name=payload.name.strip(), description=payload.description.strip(), owner_id=request.state.user['id'])
+        if not postgres_enabled():
+            with accounts.transaction() as sql:
+                sql("INSERT INTO campaign_access(campaign_id,user_id,role) VALUES (%s,%s,'owner')", (campaign['campaignId'],request.state.user['id']))
+    return data(accounts.decorate(campaign,request.state.user['id']), status.HTTP_201_CREATED)
 
 
 @app.get("/v1/campaigns/{campaign_id}")
-def get_campaign(campaign_id: str) -> Any:
+def get_campaign(campaign_id: str, request: Request) -> Any:
     with store.lock:
-        return data(_campaign_or_404(campaign_id))
+        return data(accounts.decorate(_campaign_or_404(campaign_id),request.state.user["id"]))
 
 
 @app.patch("/v1/campaigns/{campaign_id}")
@@ -419,30 +426,6 @@ def list_proposals(campaign_id: str, proposal_status: str | None = None, status:
         return data([proposal for proposal in pending_proposals if not selected_status or proposal["status"] == selected_status])
 
 
-def _proposal_from_notes(content: str, source: str) -> list[dict[str, Any]]:
-    lowered = content.lower()
-    matches = [
-        ("tax", "Economy", "A change to taxes, tariffs, or trade was reported."),
-        ("tariff", "Economy", "A change to taxes, tariffs, or trade was reported."),
-        ("oath", "Magic Systems", "An oath or magical rule was reported."),
-        ("magic", "Magic Systems", "A magical event or rule was reported."),
-        ("court", "Government Organizations", "A government organization changed or acted."),
-        ("faction", "Non-Government Organizations", "A faction action was reported."),
-    ]
-    unique: dict[str, tuple[str, str]] = {}
-    for word, category, title in matches:
-        if word in lowered:
-            unique.setdefault(category, (title, category))
-    if not unique:
-        unique["General Overview"] = ("A new campaign event was reported.", "General Overview")
-    return [
-        {
-            "id": _id("proposal"), "title": title, "category": category, "confidence": "Medium",
-            "summary": content.strip()[:500], "source": source, "status": "pending", "conflicts": [],
-            "promptVersion": "note_extraction.v1",
-        }
-        for title, category in unique.values()
-    ]
 
 
 def _complete_extraction(job_id: str, campaign_id: str, payload: NotesCreate, provider: Any, note_id: str | None = None, session_id: str | None = None) -> None:
@@ -471,6 +454,8 @@ def submit_notes(campaign_id: str, payload: NotesCreate, background_tasks: Backg
     with store.lock:
         campaign = _campaign_or_404(campaign_id)
         provider = _provider_for_request(request, campaign.get("model", "balanced"))
+        if not postgres_enabled() and getattr(provider, 'name', 'demo') != 'demo':
+            raise HTTPException(503, detail={'code': 'provider_requires_database', 'message': 'Live AI generation requires the PostgreSQL stack. Offline development supports the demo provider only.'})
         if postgres_enabled():
             try:
                 note_id, session_id = sessions.create_note(
@@ -484,6 +469,7 @@ def submit_notes(campaign_id: str, payload: NotesCreate, background_tasks: Backg
             return data({"noteId": note_id, "jobId": job_id, "status": "pending"}, status.HTTP_202_ACCEPTED)
         store.ensure_state(campaign_id)
         note_id, job_id = _id("note"), _id("job")
+        store.ensure_state(campaign_id).setdefault("notes", []).append({"id": note_id, **payload.model_dump()})
         try:
             session_number = int(payload.sessionNumber)
         except ValueError:
@@ -542,6 +528,8 @@ def submit_prep_job(campaign_id: str, payload: PrepJobCreate, background_tasks: 
     with store.lock:
         campaign = _campaign_or_404(campaign_id)
         provider = _provider_for_request(request, campaign.get("model", "balanced"))
+        if not postgres_enabled() and getattr(provider, 'name', 'demo') != 'demo':
+            raise HTTPException(503, detail={'code': 'provider_requires_database', 'message': 'Live AI generation requires the PostgreSQL stack. Offline development supports the demo provider only.'})
         if postgres_enabled():
             job_id = jobs.create(campaign_id, job_type="generate_session_prep")
             background_tasks.add_task(_complete_prep, job_id, campaign_id, payload, provider)
@@ -612,32 +600,6 @@ def _entries_to_note(saved_entries: list[dict[str, Any]]) -> str:
     return "\n\n".join(blocks)
 
 
-def _inmemory_build_proposals(campaign_name: str, entries_note: str, expand_labels: list[str]) -> list[dict[str, Any]]:
-    """Richer in-memory stand-in mirroring the two-pass worker: derive a shared
-    anchor (so proposals cross-reference), then one proposal per expand category.
-    The Postgres path uses the real worker (bible -> expansion)."""
-    label_values = {label.value.lower() for label in WorldCategoryLabel}
-    nouns = re.findall(r"\b([A-Z][a-z]{3,}(?:\s+[A-Z][a-z]{3,})?)\b", entries_note)
-    anchor = next((noun for noun in nouns if noun.lower() not in label_values), None) or campaign_name
-    proposals: list[dict[str, Any]] = []
-    for label in expand_labels:
-        summary = (
-            f"{label}: {anchor} shapes this facet of the world — named institutions and figures reach into "
-            f"daily life, tied to the world's central tensions and leaving a hook for play. "
-            "(Demo build — edit or reject before it becomes canon.)"
-        )
-        proposals.append({
-            "id": _id("proposal"),
-            "title": f"{label} — {anchor}",
-            "category": label,
-            "confidence": "Medium",
-            "summary": summary,
-            "source": "World build",
-            "status": "pending",
-            "conflicts": [],
-            "promptVersion": "world_expand.v1",
-        })
-    return proposals
 
 
 def _complete_build_world(job_id: str, campaign_id: str, expand_labels: list[str], entries_note: str, campaign_name: str, provider: Any) -> None:
@@ -691,6 +653,8 @@ def build_world(campaign_id: str, payload: WorldBuildCreate, background_tasks: B
     with store.lock:
         campaign = _campaign_or_404(campaign_id)
         provider = _provider_for_request(request, campaign.get("model", "balanced"))
+        if not postgres_enabled() and getattr(provider, 'name', 'demo') != 'demo':
+            raise HTTPException(503, detail={'code': 'provider_requires_database', 'message': 'Live AI generation requires the PostgreSQL stack. Offline development supports the demo provider only.'})
         if campaign.get("worldStatus") == "sealed":
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -802,3 +766,24 @@ def review_proposal(proposal_id: str, payload: ProposalReview) -> Any:
                 proposal["status"] = "rejected"
             return data({"proposalId": proposal_id, "status": proposal["status"], "createdCanonId": created_canon_id})
     raise _not_found("proposal")
+
+
+@app.get('/v1/campaigns/{campaign_id}/export')
+def export_campaign_json(campaign_id: str):
+    """An owner-only snapshot of durable campaign content, never demo fixtures."""
+    from fastapi.encoders import jsonable_encoder
+    from backend.db import connect
+    campaign = _campaign_or_404(campaign_id)
+    if postgres_enabled():
+        with connect() as connection:
+            connection.execute('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY')
+            content = {}
+            for table in ('world_frameworks', 'world_entries', 'sessions', 'memory_proposals', 'canon_events', 'session_preps', 'characters', 'factions', 'locations', 'story_threads', 'ai_jobs'):
+                content[table] = [dict(row) for row in connection.execute(f'SELECT * FROM {table} WHERE campaign_id=%s', (campaign_id,)).fetchall()]
+            content['session_notes'] = [dict(row) for row in connection.execute('SELECT n.* FROM session_notes n JOIN sessions s ON s.id=n.session_id WHERE s.campaign_id=%s', (campaign_id,)).fetchall()]
+    else:
+        with store.lock:
+            state = store.ensure_state(campaign_id)
+            content = {'world_entries': state['entries'], 'memory_proposals': state['proposals'], 'canon_events': state['canon'],
+                       'session_preps': [state['prep']] if state.get('prep') else [], 'session_notes': state.get('notes', [])}
+    return data(jsonable_encoder({'schemaVersion': 1, 'campaign': campaign, 'content': content, 'exportedAt': datetime.now(timezone.utc)}))

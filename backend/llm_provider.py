@@ -301,26 +301,9 @@ class DemoProvider:
 
 
 # ---------------------------------------------------------------------------
-# Real adapters — SKELETONS. Implement when a provider is chosen (D-provider).
+# Configured live provider adapter.
 # ---------------------------------------------------------------------------
 
-class AnthropicProvider:
-    """TODO: implement with the Anthropic SDK (recommended default).
-    Use tool-use / structured output for reliable JSON; map usage -> tokens/cost."""
-
-    name = "anthropic"
-
-    def __init__(self, api_key: str, default_model: str = "claude-sonnet-5") -> None:
-        self.api_key = api_key
-        self.default_model = default_model
-
-    def generate_structured(self, req: LLMRequest) -> LLMResponse:
-        raise NotImplementedError("AnthropicProvider.generate_structured")
-
-
-# Model routing by campaign profile. The balanced default keeps the cheaper
-# model for routine extraction/world drafting and reserves the stronger model
-# for session prep; the other profiles make the cost/quality trade-off explicit.
 _MODEL_BY_PROFILE = {
     "cheap": {
         "note_extraction.v1": "gpt-4o-mini",
@@ -342,9 +325,6 @@ _MODEL_BY_PROFILE = {
     },
 }
 
-# Approximate list pricing, USD per 1K tokens (input, output). Rough estimates
-# for the cost-visibility tile, not a billing source of truth — update if
-# OpenAI's pricing changes or you swap models.
 _PRICE_PER_1K_TOKENS_USD = {
     "gpt-4o-mini": (0.00015, 0.0006),
     "gpt-4o": (0.0025, 0.01),
@@ -444,8 +424,6 @@ def get_provider(name: str, **kwargs) -> LLMProvider:
     """Factory selected by config (LLM_PROVIDER env var). Keeps callers agnostic."""
     if name == "demo":
         return DemoProvider(**kwargs)
-    if name == "anthropic":
-        return AnthropicProvider(**kwargs)
     if name == "openai":
         return OpenAIProvider(**kwargs)
     raise ValueError(f"unknown LLM provider: {name}")

@@ -15,7 +15,13 @@ import unittest
 from backend.db import connect, postgres_enabled
 from backend.migrate import apply_migrations
 from backend.repositories.campaigns import PostgresCampaignRepository
-from backend.tests._asgi_client import request
+from backend.tests._asgi_client import request as anonymous_request
+import hashlib
+import time
+
+async def request(*args, **kwargs):
+    return await anonymous_request(*args, **kwargs, headers={"cookie":"session_smith=worker-contract-token"})
+
 
 
 @unittest.skipUnless(postgres_enabled(), "DATABASE_URL is not configured")
@@ -23,7 +29,10 @@ class WorkerPipelineIntegrationTests(unittest.TestCase):
     def setUp(self) -> None:
         apply_migrations()
         self.campaigns = PostgresCampaignRepository()
-        campaign = self.campaigns.create(name="Worker wiring test", description="")
+        with connect() as connection:
+            connection.execute("INSERT INTO app_users(id,email,name,password_hash) VALUES ('worker-contract','worker-contract@example.com','GM','unused') ON CONFLICT(id) DO NOTHING")
+            connection.execute("INSERT INTO account_sessions(token_hash,user_id,expires_at) VALUES (%s,'worker-contract',%s) ON CONFLICT(token_hash) DO UPDATE SET expires_at=EXCLUDED.expires_at",(hashlib.sha256(b'worker-contract-token').hexdigest(),time.time()+3600))
+        campaign = self.campaigns.create(name="Worker wiring test", description="", owner_id="worker-contract")
         self.campaign_id = campaign["campaignId"]
 
     def tearDown(self) -> None:

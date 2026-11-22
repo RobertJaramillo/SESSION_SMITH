@@ -216,3 +216,13 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Firebase Admin credentials must stay outside source control.
+**/*firebase*admin*.json
+
+# Local database backups contain private account data.
+backups/
+
+# Installed dependencies and TypeScript build cache.
+frontend/node_modules/
+frontend/tsconfig.tsbuildinfo
